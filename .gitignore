@@ -2,3 +2,5 @@
 
 /ReddStats.Core/bin
 /ReddStats.Core/obj
+/ReddStats.Web/bin
+/ReddStats.Web/obj/Debug

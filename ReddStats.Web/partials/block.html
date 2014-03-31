@@ -1,0 +1,94 @@
+﻿<div ng-if="loaded">
+    <h1>{{Block.Id}}</h1>
+    <br />
+
+    <div class="block_summary">
+        <dl>
+            <div>
+                <dt>Hash</dt>
+                <dd>{{Block.Hash}}</dd>
+            </div>
+            <div>
+                <dt>Previous Block</dt>
+                <dd>{{Block.Previous}}</dd>
+            </div>
+            <div>
+                <dt>Next Block</dt>
+                <dd>{{Block.Next}}</dd>
+            </div>
+            <div>
+                <dt>Merkle Root</dt>
+                <dd>{{Block.Merkle}}</dd>
+            </div>
+            <div>
+                <dt>Difficulty</dt>
+                <dd>{{Block.Difficulty}}</dd>
+            </div>
+            <div>
+                <dt>Hash Rate (est.)</dt>
+                <dd>{{Block.HashRate}}</dd>
+            </div>
+            <div>
+                <dt>Nonce</dt>
+                <dd>{{Block.Nonce}}</dd>
+            </div>
+            <div>
+                <dt>Tansactions</dt>
+                <dd>{{Block.TransactionsCount}}</dd>
+            </div>
+            <div>
+                <dt>Value Out</dt>
+                <dd>{{Block.ValueOut}}</dd>
+            </div>
+        </dl>
+    </div>
+    <div class="block_transactions">
+        <div ng-repeat="transaction in Block.Transactions">
+            <div class="address_transaction_links">
+                <div class="transaction_id">
+                    <a href="#!/transaction/{{transaction.Id}}">{{transaction.Id}}</a>
+                </div>
+                <div class="transaction_data">
+                    <div class="transaction_from">
+                        <div ng-repeat="input_tx in transaction.Inputs">
+                            <div class="transaction_adress">{{input_tx.Address}}</div>
+                            <div class="transaction_adress">{{input_tx.Value}}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="transaction_to">
+                    <div ng-repeat="output_tx in transaction.Outputs">
+                        <div class="transaction_adress">{{output_tx.Address}}</div>
+                        <div class="transaction_adress">{{output_tx.Value}}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="transaction_money">
+                <div class="t_money_data">
+                    <div class="labels">
+                        <div class="label">
+                            Fee
+                        </div>
+                        <div class="label">
+                            Total
+                        </div>
+                    </div>
+                    <div class="values">
+                        <div class="value">{{transaction.Fee}}</div>
+                        <div class="value">{{transaction.TotalValue}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="address_transaction_data">
+            <div class="address_transaction_value">{{transaction.Value}}</div>
+            <div class="address_transaction_date">{{transaction.Date}}</div>
+            <div class="address_transaction_balance">{{transaction.Balance}}</div>
+            <div class="address_transaction_balance">{{transaction.Rank}}</div>
+        </div>
+    </div>
+</div>
+</div>
+<div ng-if="!loaded">
+    carregando...
+</div>

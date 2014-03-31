@@ -1,0 +1,52 @@
+﻿<div ng-if="loaded">
+    <h1>{{Address.Address}}</h1>
+    <br />
+
+    <div class="account_summary">
+        <dl>
+            <div>
+                <dt>Hash</dt>
+                <dd>{{Address.Address}}</dd>
+            </div>
+            <div>
+                <dt>Balance</dt>
+                <dd>{{Address.Balance}}</dd>
+            </div>
+            <div>
+                <dt>Total Received</dt>
+                <dd>{{Address.TotalReceived}}</dd>
+            </div>
+            <div>
+                <dt>Transactions</dt>
+                <dd>{{Address.TransactionsCount}}</dd>
+            </div>
+            <div>
+                <dt>Rich Rank</dt>
+                <dd>{{Address.Rank}}</dd>
+            </div>
+        </dl>
+    </div>
+    <div class="qrcode">
+
+    </div>
+    <div class="account_transactions">
+        <div ng-repeat="transaction in Address.Transactions">
+            <div class="address_transaction_links">
+                <div class="transaction_id">
+                    <a href="#!/transaction/{{transaction.Id}}">{{transaction.Id}}</a>
+                </div><div class="transaction_block">
+                    <a href="#!/block/{{transaction.Block}}">{{transaction.Block}}</a>
+                </div>
+            </div>
+            <div class="address_transaction_data">
+                <div class="address_transaction_value">{{transaction.Value}}</div>
+                <div class="address_transaction_date">{{transaction.Date}}</div>
+                <div class="address_transaction_balance">{{transaction.Balance}}</div>
+                <div class="address_transaction_balance">{{transaction.Rank}}</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div ng-if="!loaded">
+    carregando...
+</div>

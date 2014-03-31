@@ -378,7 +378,7 @@ namespace bsparser
                 return false;
             }
 
-            var stream = new FileStream(CurrentFile, FileMode.Open);
+            var stream = new FileStream(CurrentFile, FileMode.Open, FileAccess.Read);
 
 
             Block block;

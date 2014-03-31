@@ -1,0 +1,18 @@
+﻿@using System.Web.Optimization
+@{ Layout = null;}
+
+<!doctype html>
+<html lang="en" ng-app="reddstats">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta charset="utf-8"> <!-- Fazer uma diretiva de meta para SEO -->
+    <title>ReddStats</title> <!-- TODO: Fazer uma diretiva de title para SEO -->
+    @Styles.Render("~/content/css/cssbundle")
+    @Scripts.Render("~/bundles/app")
+</head>
+    <body>
+        <div id="header"></div>
+        <div ui-view="miolo"></div>
+        <div id="footer"></div>
+    </body>
+</html>
