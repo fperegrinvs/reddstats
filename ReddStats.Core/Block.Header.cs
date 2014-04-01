@@ -43,6 +43,8 @@
 
         public string NextBlockHash { get; set; }
 
+        public int BlockId { get; set; }
+
         public override int GetHashCode()
         {
             return this.hashCode;

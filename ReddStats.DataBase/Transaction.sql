@@ -3,6 +3,7 @@
     [TransactionId] VARCHAR(64) NOT NULL, 
     [BlockId] INT NOT NULL, 
     [InputsCount] INT NULL, 
+    [OutputsCount] INT NULL, 
     [TotalIn] MONEY NULL, 
     [TotalOut] MONEY NULL, 
     [Size] INT NULL, 

@@ -70,6 +70,28 @@
             return bytes;
         }
 
+        public static byte[] FromHexStringReverse(this string s)
+        {
+            if (s == null)
+            {
+                throw new ArgumentNullException("s");
+            }
+
+            var chars = s.ToCharArray();
+            var u = chars.Length;
+            var bytes = new byte[u / 2];
+            int offset = chars.Length - 1;
+
+            int b = 0;
+            while (offset > 0)
+            {
+                bytes[b++] = (byte)(LookupTableHigh[chars[offset-1]] | LookupTableLow[chars[offset]]);
+                offset -= 2;
+            }
+
+            return bytes;
+        }
+
         public static UInt256 HighestTarget = UInt256.Parse("00000000FFFF0000000000000000000000000000000000000000000000000000", NumberStyles.HexNumber);
 
         public static double TargetToDifficulty(UInt256 target)
@@ -113,7 +135,7 @@
         public static string ToHexStringReverse(this byte[] bytes, int start = 0, int len = -1)
         {
             var u = len == -1 ? bytes.Length : start + len;
-            var chars = new char[len * 2];
+            var chars = new char[(u-start) * 2];
             int offset = u - 1;
 
             int b = 0;

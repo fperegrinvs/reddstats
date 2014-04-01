@@ -1,5 +1,7 @@
 ﻿namespace bsparser
 {
+    using ReddStats.Core;
+
     class Program
     {
         static void Main(string[] args)

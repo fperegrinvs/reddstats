@@ -1,21 +1,32 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core
 {
-    using System;
     using System.Collections.Generic;
 
     public class TxInput
     {
-        public TxInput(TxOutputKey previousTxOutputKey, List<byte> scriptSignature, UInt32 sequence)
+        public string  PreviousTxOutputKey { get; set; }
+
+        public uint PreviousOutputIndex { get; set; }
+
+        public string ScriptSignature { get; set; }
+
+        public uint Sequence { get; set; }
+
+        public byte[] PreviousTxOutputKeyBinary { get; set; }
+
+        private string previouTxReference;
+
+        public string PreviousTxReference
         {
-            this.PreviousTxOutputKey = previousTxOutputKey;
-            this.ScriptSignature = scriptSignature;
-            this.Sequence = sequence;
+            get
+            {
+                if (previouTxReference == null)
+                {
+                    previouTxReference = PreviousTxOutputKey + "#" + PreviousOutputIndex;
+                }
+
+                return previouTxReference;
+            }
         }
-
-        public TxOutputKey PreviousTxOutputKey { get; private set; }
-
-        public List<byte> ScriptSignature { get; private set; }
-
-        public UInt32 Sequence { get; private set; }
     }
 }

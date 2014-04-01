@@ -72,5 +72,13 @@
             writer.WriteVarInt((UInt64)value.Length);
             writer.WriteBytes(value.Length, value);
         }
+
+        public static void WriteVarBytes(this BinaryWriter writer, string value)
+        {
+            var bytes = value.FromHexStringReverse();
+
+            writer.WriteVarInt((UInt64)bytes.Length);
+            writer.WriteBytes(bytes.Length, bytes);
+        }
     }
 }

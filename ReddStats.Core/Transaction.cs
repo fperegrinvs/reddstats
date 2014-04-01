@@ -1,8 +1,10 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
+    using bsparser;
 
     public class Transaction
     {
@@ -10,33 +12,66 @@
             UInt32 version,
             List<TxInput> inputs,
             List<TxOutput> outputs,
-            UInt32 lockTime,
-            UInt256? hash = null)
+            UInt32 lockTime)
         {
             this.Version = version;
             this.Inputs = inputs;
             this.Outputs = outputs;
             this.LockTime = lockTime;
 
-            var sizeEstimate = inputs.Aggregate(0L, (current, t) => current + t.ScriptSignature.Count);
+            var sizeEstimate = inputs.Aggregate(0L, (current, t) => current + (t.ScriptSignature.Length / 2));
 
             sizeEstimate = outputs.Aggregate(sizeEstimate, (current, t) => current + t.ScriptPublicKey.Count);
             sizeEstimate = (long)(sizeEstimate * 1.5);
-            this.SizeEstimate = sizeEstimate;
-
-            this.Hash = hash ?? DataCalculator.CalculateTransactionHash(version, inputs, outputs, lockTime);
+            this.Size = sizeEstimate;
         }
 
-        public UInt32 Version { get; private set; }
+        public int BlockId { get; set; }
 
-        public List<TxInput> Inputs { get; private set; }
+        public uint InputsCount { get; set; }
 
-        public List<TxOutput> Outputs { get; private set; }
+        public uint OutputsCount { get; set; }
 
-        public UInt32 LockTime { get; private set; }
+        public decimal TotalIn { get; set; }
 
-        public UInt256 Hash { get; private set; }
+        public decimal TotalOut { get; set; }
 
-        public long SizeEstimate { get; private set; }
+        public decimal Fee { get; set; }
+
+        public DateTime Date { get; set; }
+
+        public uint Version { get; set; }
+
+        public List<TxInput> Inputs { get; set; }
+
+        public List<TxOutput> Outputs { get; set; }
+
+        public UInt32 LockTime { get; set; }
+
+        private string transactionId;
+
+        public string TransactionId
+        {
+            get
+            {
+                if (this.transactionId == null)
+                {
+                   this.transactionId =  DataCalculator.CalculateTransactionHash(Version, Inputs, Outputs, LockTime).ToHexStringReverse();
+                }
+
+                return this.transactionId;
+            }
+            set
+            {
+                transactionId = value;
+            }
+        }
+
+        public long Size { get; set; }
+
+        public void CalculateMetadata()
+        {
+            
+        }
     }
 }

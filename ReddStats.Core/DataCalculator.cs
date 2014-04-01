@@ -7,6 +7,8 @@
     using System.Text;
     using System.Threading;
 
+    using ReddStats.Core;
+
     public static class DataCalculator
     {
         private static readonly ThreadLocal<SHA256Managed> _sha256 = new ThreadLocal<SHA256Managed>();
@@ -57,13 +59,13 @@
             return SHA256.ComputeHash(SHA256.ComputeHash(buffer));
         }
 
-        public static UInt256 CalculateTransactionHash(
+        public static byte[] CalculateTransactionHash(
             UInt32 Version,
             List<TxInput> Inputs,
             List<TxOutput> Outputs,
             UInt32 LockTime)
         {
-            return new UInt256(DoubleSHA256(EncodeTransaction(Version, Inputs, Outputs, LockTime)));
+            return DoubleSHA256(EncodeTransaction(Version, Inputs, Outputs, LockTime));
         }
 
         public static byte[] EncodeTransaction(
@@ -79,9 +81,9 @@
                 writer.WriteVarInt((UInt64)Inputs.Count);
                 foreach (var input in Inputs)
                 {
-                    writer.Write32Bytes(input.PreviousTxOutputKey.TxHash);
-                    writer.Write4Bytes(input.PreviousTxOutputKey.TxOutputIndex);
-                    writer.WriteVarBytes(input.ScriptSignature.ToArray());
+                    writer.Write(input.PreviousTxOutputKeyBinary);
+                    writer.Write4Bytes(input.PreviousOutputIndex);
+                    writer.WriteVarBytes(input.ScriptSignature);
                     writer.Write4Bytes(input.Sequence);
                 }
                 writer.WriteVarInt((UInt64)Outputs.Count);

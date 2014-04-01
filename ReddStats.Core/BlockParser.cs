@@ -1,13 +1,12 @@
-﻿using System.Text;
-using System.Collections.Generic;
-
-namespace bsparser
+﻿namespace ReddStats.Core
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
 
-    using CryptSharp.Utility;
+    using bsparser;
 
     using OfficeOpenXml;
     using OfficeOpenXml.Style;
@@ -57,7 +56,7 @@ namespace bsparser
             using (var file = File.Open(filename, FileMode.OpenOrCreate))
             {
                 var ef = new ExcelPackage(file);
-                for (var i = 0; i < History.Count; i += 2)
+                for (var i = 0; i < this.History.Count; i += 2)
                 {
                     var excel = ef.Workbook.Worksheets.Add("Week " + ((i / 2) + 1));
 
@@ -65,7 +64,7 @@ namespace bsparser
                     excel.Cells["A1:C1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     excel.Cells["A11:C11"].Merge = true;
                     excel.Cells["A11:C11"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    excel.Cells[1, 1].Value = string.Format("Week {0} (Blocks {1} - {2})", (i / 2) + 1, History[i].StartBlock, History[i].EndBlock);
+                    excel.Cells[1, 1].Value = string.Format("Week {0} (Blocks {1} - {2})", (i / 2) + 1, this.History[i].StartBlock, this.History[i].EndBlock);
 
                     excel.Cells["F1:H1"].Merge = true;
                     excel.Cells["F1:H1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -73,8 +72,8 @@ namespace bsparser
                     excel.Cells["F11:H11"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     excel.Cells[1, 6].Value = string.Format("Week {0} (Total)", ((i / 2) + 1));
 
-                    WriteSummary(excel, 2, History[i]);
-                    WriteSummary(excel, 7, History[i + 1]);
+                    this.WriteSummary(excel, 2, this.History[i]);
+                    this.WriteSummary(excel, 7, this.History[i + 1]);
                 }
 
                 ef.Save();
@@ -141,7 +140,7 @@ namespace bsparser
             for (var a = 0; a < history.TopAccounts.Count; a++)
             {
                 excel.Cells[13 + index, left].Value = history.TopAccounts[a].Address;
-                if (!LinkedAccountList.ContainsKey(history.TopAccounts[a].Address))
+                if (!this.LinkedAccountList.ContainsKey(history.TopAccounts[a].Address))
                 {
                     excel.Cells[13 + index, left + 1].Value = history.TopAccounts[a].Balance;
                     excel.Cells[13 + index, left - 1].Value = a + 1;
@@ -149,10 +148,10 @@ namespace bsparser
                 else
                 {
                     var begin = index;
-                    foreach (var secondary in LinkedAccountList[history.TopAccounts[a].Address])
+                    foreach (var secondary in this.LinkedAccountList[history.TopAccounts[a].Address])
                     {
                         // do not list insignificant addresses
-                        if (Balances[secondary] >= 100 * Divide)
+                        if (this.Balances[secondary] >= 100 * Divide)
                         {
                             index++;
                             excel.Cells[13 + index, left].Value = secondary;
@@ -179,15 +178,15 @@ namespace bsparser
 
         public void ProcessBalances(bool linkAccount = false)
         {
-            Transactions = new Dictionary<string, Tuple<string, ulong>>();
-            Balances = new Dictionary<string, ulong>();
-            NonzeroBalances = new Dictionary<string, ulong>();
-            History = new List<Summary>();
-            LinkedAccounts = new Dictionary<string, string>();
-            LinkedAccountList = new Dictionary<string, HashSet<string>>();
+            this.Transactions = new Dictionary<string, Tuple<string, ulong>>();
+            this.Balances = new Dictionary<string, ulong>();
+            this.NonzeroBalances = new Dictionary<string, ulong>();
+            this.History = new List<Summary>();
+            this.LinkedAccounts = new Dictionary<string, string>();
+            this.LinkedAccountList = new Dictionary<string, HashSet<string>>();
 
             var i = 0;
-            foreach (var block in Blocks)
+            foreach (var block in this.Blocks)
             {
                 i++;
 
@@ -201,51 +200,51 @@ namespace bsparser
                             continue;
                         }
 
-                        if (input.PreviousTxOutputKey.TxHash > new UInt256(0))
+                        if (!string.IsNullOrEmpty(input.PreviousTxOutputKey))
                         {
-                            var key = input.PreviousTxOutputKey.TxHash + "#" + input.PreviousTxOutputKey.TxOutputIndex;
-                            var debitAccount = Transactions[key];
+                            var key = input.PreviousTxReference;
+                            var debitAccount = this.Transactions[key];
 
                             // transaction with multiple inputs. Should I link the accounts or this is already a master account ?
-                            if (linkAccount && trans.Inputs.Count > 1 && !LinkedAccountList.ContainsKey(debitAccount.Item1))
+                            if (linkAccount && trans.Inputs.Count > 1 && !this.LinkedAccountList.ContainsKey(debitAccount.Item1))
                             {
                                 string mainAccountAddress;
 
-                                if (LinkedAccounts.ContainsKey(debitAccount.Item1))
+                                if (this.LinkedAccounts.ContainsKey(debitAccount.Item1))
                                 {
-                                    mainAccountAddress = LinkedAccounts[debitAccount.Item1];
+                                    mainAccountAddress = this.LinkedAccounts[debitAccount.Item1];
                                 }
                                 else
                                 {
-                                    var mainAccountTransactionCandidate = trans.Inputs[0].PreviousTxOutputKey.TxHash + "#" + trans.Inputs[0].PreviousTxOutputKey.TxOutputIndex;
-                                    var mainAccountAddressCandidate = Transactions[mainAccountTransactionCandidate].Item1;
+                                    var mainAccountTransactionCandidate = trans.Inputs[0].PreviousTxReference;
+                                    var mainAccountAddressCandidate = this.Transactions[mainAccountTransactionCandidate].Item1;
 
                                     // if main account candidate point to other account, the pointed account is the real main
-                                    mainAccountAddress = LinkedAccounts.ContainsKey(mainAccountAddressCandidate)
-                                        ? LinkedAccounts[mainAccountAddressCandidate]
+                                    mainAccountAddress = this.LinkedAccounts.ContainsKey(mainAccountAddressCandidate)
+                                        ? this.LinkedAccounts[mainAccountAddressCandidate]
                                         : mainAccountAddressCandidate;
                                 }
 
                                 // check if this is the main account
                                 if (mainAccountAddress != debitAccount.Item1)
                                 {
-                                    LinkedAccounts[debitAccount.Item1] = mainAccountAddress;
+                                    this.LinkedAccounts[debitAccount.Item1] = mainAccountAddress;
 
-                                    if (!LinkedAccountList.ContainsKey(mainAccountAddress))
+                                    if (!this.LinkedAccountList.ContainsKey(mainAccountAddress))
                                     {
-                                        LinkedAccountList[mainAccountAddress] = new HashSet<string>();
+                                        this.LinkedAccountList[mainAccountAddress] = new HashSet<string>();
                                     }
 
-                                    LinkedAccountList[mainAccountAddress].Add(debitAccount.Item1);
+                                    this.LinkedAccountList[mainAccountAddress].Add(debitAccount.Item1);
                                 }
                             }
 
-                            var balance = Balances[debitAccount.Item1] -= debitAccount.Item2;
+                            var balance = this.Balances[debitAccount.Item1] -= debitAccount.Item2;
                             this.TotalMoney -= debitAccount.Item2 / Divide;
 
                             if (balance == 0)
                             {
-                                NonzeroBalances.Remove(debitAccount.Item1);
+                                this.NonzeroBalances.Remove(debitAccount.Item1);
                             }
                         }
                     }
@@ -260,20 +259,20 @@ namespace bsparser
 
                         var d = DataCalculator.GetToAddress(output.ScriptPublicKey.ToArray());
 
-                        this.TotalMoney += t != 0  ? output.Value / Divide : output.Value;
+                        this.TotalMoney += t != 0 ? output.Value / Divide : output.Value;
 
-                        if (Balances.ContainsKey(d))
+                        if (this.Balances.ContainsKey(d))
                         {
-                            var balance = Balances[d] += output.Value;
-                            NonzeroBalances[d] = balance;
+                            var balance = this.Balances[d] += output.Value;
+                            this.NonzeroBalances[d] = balance;
                         }
                         else
                         {
-                            Balances[d] = output.Value;
-                            NonzeroBalances[d] = output.Value;
+                            this.Balances[d] = output.Value;
+                            this.NonzeroBalances[d] = output.Value;
                         }
 
-                        Transactions[trans.Hash + "#" + o] = new Tuple<string, ulong>(d, output.Value);
+                        this.Transactions[trans.TransactionId + "#" + o] = new Tuple<string, ulong>(d, output.Value);
 
                         o++;
                     }
@@ -283,27 +282,27 @@ namespace bsparser
 
                 if (i % SnapInterval == 0 || i == this.Blocks.Count - 1)
                 {
-                    var diff = this.CreateSummary(History.Count > 0, i, linkAccount);
-                    var total = History.Count > 0 ? this.CreateSummary(false, i, linkAccount) : diff;
-                    History.Add(diff);
-                    History.Add(total);
+                    var diff = this.CreateSummary(this.History.Count > 0, i, linkAccount);
+                    var total = this.History.Count > 0 ? this.CreateSummary(false, i, linkAccount) : diff;
+                    this.History.Add(diff);
+                    this.History.Add(total);
                 }
             }
         }
 
         public Summary CreateSummary(bool isDiff, int position, bool linkAccounts)
         {
-            var pastSummary = isDiff ? History.Last() : null;
+            var pastSummary = isDiff ? this.History.Last() : null;
             var summary = new Summary();
             summary.StartBlock = isDiff ? pastSummary.EndBlock + 1 : 0;
             summary.EndBlock = position;
-            summary.NonZero = new Dictionary<string, decimal>(NonzeroBalances.Count);
+            summary.NonZero = new Dictionary<string, decimal>(this.NonzeroBalances.Count);
             summary.TotalMoney = isDiff ? this.TotalMoney - pastSummary.TotalMoney : this.TotalMoney;
 
             foreach (var balance in this.Balances)
             {
                 // skup secundary linked accounts
-                if (linkAccounts && LinkedAccounts.ContainsKey(balance.Key))
+                if (linkAccounts && this.LinkedAccounts.ContainsKey(balance.Key))
                 {
                     continue;
                 }
@@ -311,11 +310,11 @@ namespace bsparser
                 Decimal past = 0;
                 if (isDiff)
                 {
-                    for (var h = History.Count - 1; h >= 0; h--)
+                    for (var h = this.History.Count - 1; h >= 0; h--)
                     {
-                        if (History[h].NonZero.ContainsKey(balance.Key))
+                        if (this.History[h].NonZero.ContainsKey(balance.Key))
                         {
-                            past = History[h].NonZero[balance.Key];
+                            past = this.History[h].NonZero[balance.Key];
                         }
                     }
                 }
@@ -323,7 +322,7 @@ namespace bsparser
                 var balanceValue = balance.Value;
 
                 // this is a main account
-                if (linkAccounts && LinkedAccountList.ContainsKey(balance.Key))
+                if (linkAccounts && this.LinkedAccountList.ContainsKey(balance.Key))
                 {
                     balanceValue = this.LinkedAccountList[balance.Key].Aggregate(balanceValue, (current, secundary) => current + this.Balances[secundary]);
                 }
@@ -374,28 +373,28 @@ namespace bsparser
 
         private bool ParseFile(int order)
         {
-            CurrentFile = BlockPath.Replace("$n$", order.ToString("D5"));
-            if (!File.Exists(CurrentFile))
+            this.CurrentFile = BlockPath.Replace("$n$", order.ToString("D5"));
+            if (!File.Exists(this.CurrentFile))
             {
                 return false;
             }
 
-            var stream = new FileStream(CurrentFile, FileMode.Open, FileAccess.Read);
+            var stream = new FileStream(this.CurrentFile, FileMode.Open, FileAccess.Read);
 
 
             Block block;
             do
             {
-                block = ReadBlock(stream);
+                block = ReadBlock(stream, this.Blocks.Count);
 
                 if (block != null)
                 {
-                    if (Blocks.Count > 0)
+                    if (this.Blocks.Count > 0)
                     {
-                        Blocks.Last().Hash = block.PreviousBlockHash;
+                        this.Blocks.Last().Hash = block.PreviousBlockHash;
                     }
 
-                    Blocks.Add(block);
+                    this.Blocks.Add(block);
                 }
             }
             while (block != null);
@@ -403,7 +402,7 @@ namespace bsparser
             return true;
         }
 
-        private static Block ReadBlock(Stream stream)
+        private static Block ReadBlock(Stream stream, int blockHeight)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
@@ -412,14 +411,14 @@ namespace bsparser
                     return null;
                 }
 
-                var block = DecodeBlockHeader(stream);
+                var block = DecodeBlockHeader(stream, blockHeight);
 
                 if (block == null)
                 {
                     return null;
                 }
 
-                var transactions = reader.DecodeList(() => DecodeTransaction(stream));
+                var transactions = reader.DecodeList(() => DecodeTransaction(stream, blockHeight));
 
                 block.Transactions = transactions;
 
@@ -427,15 +426,13 @@ namespace bsparser
             }
         }
 
-        private static Block DecodeBlockHeader(Stream stream)
+        private static Block DecodeBlockHeader(Stream stream, int blockHeight)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
                 reader.Read8Bytes(); // 4 bytes magic, 4 bytes size
 
                 var headerBin = reader.ReadBytes(80);
-
-                //var blockHash = SCrypt.ComputeDerivedKey(headerBin, headerBin, 1024, 1, 1, 1, 32).ToHexStringReverse();
 
                 var version = BitConverter.ToUInt32(headerBin, 0); // reader.Read4Bytes();
 
@@ -449,7 +446,7 @@ namespace bsparser
                 var time = BitConverter.ToUInt32(headerBin, 68).ToDateTime(); // reader.Read4Bytes().ToDateTime();
                 var bits = BitConverter.ToUInt32(headerBin, 72).GetDifficulty();// reader.Read4Bytes().GetDifficulty();
                 var nonce = BitConverter.ToUInt32(headerBin, 76);// reader.Read4Bytes();
-                return new Block(version, previousBlock, merkleRoot, time, bits, nonce);
+                return new Block(version, previousBlock, merkleRoot, time, bits, nonce) { BlockId = blockHeight };
             }
         }
 
@@ -457,13 +454,15 @@ namespace bsparser
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
+                var keyBytes = reader.ReadBytes(32);
                 return new TxInput
-                (
-                    new TxOutputKey(reader.Read32Bytes(),
-                        reader.Read4Bytes()),
-                        reader.ReadVarBytes().ToList(),
-                        reader.Read4Bytes()
-                );
+                       {
+                           PreviousTxOutputKey = keyBytes.ToHexStringReverse(),
+                           PreviousTxOutputKeyBinary = keyBytes,
+                           PreviousOutputIndex = reader.Read4Bytes(),
+                           ScriptSignature = reader.ReadVarBytes().ToHexStringReverse(),
+                           Sequence = reader.Read4Bytes()
+                       };
             }
         }
 
@@ -479,7 +478,7 @@ namespace bsparser
             }
         }
 
-        private static Transaction DecodeTransaction(Stream stream, UInt256? txHash = null)
+        private static Transaction DecodeTransaction(Stream stream, int blockId)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
@@ -487,8 +486,7 @@ namespace bsparser
                     reader.Read4Bytes(),
                     reader.DecodeList(() => DecodeTxInput(stream)),
                     reader.DecodeList(() => DecodeTxOutput(stream)),
-                    reader.Read4Bytes(),
-                    txHash);
+                    reader.Read4Bytes()) { BlockId = blockId };
             }
         }
     }
