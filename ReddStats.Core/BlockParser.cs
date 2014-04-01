@@ -7,6 +7,8 @@ namespace bsparser
     using System.IO;
     using System.Linq;
 
+    using CryptSharp.Utility;
+
     using OfficeOpenXml;
     using OfficeOpenXml.Style;
 
@@ -388,6 +390,11 @@ namespace bsparser
 
                 if (block != null)
                 {
+                    if (Blocks.Count > 0)
+                    {
+                        Blocks.Last().Hash = block.PreviousBlockHash;
+                    }
+
                     Blocks.Add(block);
                 }
             }
@@ -398,47 +405,51 @@ namespace bsparser
 
         private static Block ReadBlock(Stream stream)
         {
-
-            using (var reader = new BinaryReader(stream, Encoding.ASCII, leaveOpen: true))
+            using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
                 if (reader.PeekChar() == -1)
                 {
                     return null;
                 }
 
-                var bytes = reader.ReadBytes(88); // header
-                //var header = DecodeBlockHeader(stream, null);
+                var block = DecodeBlockHeader(stream);
 
-                if (bytes[8] == 0)
+                if (block == null)
                 {
                     return null;
                 }
 
                 var transactions = reader.DecodeList(() => DecodeTransaction(stream));
 
-                return new Block { Header = null, Transactions = transactions };
+                block.Transactions = transactions;
+
+                return block;
             }
         }
 
-        private static BlockHeader DecodeBlockHeader(Stream stream, UInt256? blockHash = null)
+        private static Block DecodeBlockHeader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
                 reader.Read8Bytes(); // 4 bytes magic, 4 bytes size
 
-                var version = reader.Read4Bytes();
+                var headerBin = reader.ReadBytes(80);
+
+                //var blockHash = SCrypt.ComputeDerivedKey(headerBin, headerBin, 1024, 1, 1, 1, 32).ToHexStringReverse();
+
+                var version = BitConverter.ToUInt32(headerBin, 0); // reader.Read4Bytes();
 
                 if (version == 0)
                 {
                     return null;
                 }
 
-                var previousBlock = reader.Read32Bytes();
-                var merkleRoot = reader.Read32Bytes();
-                var time = reader.Read4Bytes();
-                var bits = reader.Read4Bytes();
-                var nonce = reader.Read4Bytes();
-                return new BlockHeader(version, previousBlock, merkleRoot, time, bits, nonce, blockHash);
+                var previousBlock = headerBin.ToHexStringReverse(4, 32); //reader.Read32BytesString();
+                var merkleRoot = headerBin.ToHexStringReverse(36, 32);// reader.Read32BytesString();
+                var time = BitConverter.ToUInt32(headerBin, 68).ToDateTime(); // reader.Read4Bytes().ToDateTime();
+                var bits = BitConverter.ToUInt32(headerBin, 72).GetDifficulty();// reader.Read4Bytes().GetDifficulty();
+                var nonce = BitConverter.ToUInt32(headerBin, 76);// reader.Read4Bytes();
+                return new Block(version, previousBlock, merkleRoot, time, bits, nonce);
             }
         }
 

@@ -4,3 +4,5 @@
 /ReddStats.Core/obj
 /ReddStats.Web/bin
 /ReddStats.Web/obj/Debug
+/ReddStats.DataBase/bin/Debug
+/ReddStats.DataBase/obj/Debug

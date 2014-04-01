@@ -40,6 +40,10 @@
             return new UInt256(reader.ReadBytes(32));
         }
 
+        public static string Read32BytesString(this BinaryReader reader)
+        {
+            return reader.ReadBytes(32).ToHexStringReverse();
+        }
         public static UInt64 ReadVarInt(this BinaryReader reader)
         {
             var value = reader.ReadByte();

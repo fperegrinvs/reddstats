@@ -1,6 +1,7 @@
 ﻿namespace bsparser
 {
     using System;
+    using System.Globalization;
 
     public struct UInt256 
     {
@@ -60,6 +61,35 @@
             : this(BitConverter.GetBytes(value))
         { }
 
+        public UInt256(System.Numerics.BigInteger value)
+            : this(value.ToByteArray())
+        {
+            if (value < 0)
+                throw new ArgumentOutOfRangeException();
+        }
+
+        public System.Numerics.BigInteger ToBigInteger()
+        {
+            // add a trailing zero so that value is always positive
+            return new System.Numerics.BigInteger(ToByteArray().Concat(0));
+        }
+
+
+        public static UInt256 operator *(UInt256 left, UInt256 right)
+        {
+            return new UInt256(left.ToBigInteger() * right.ToBigInteger());
+        }
+
+        public static UInt256 Parse(string value, NumberStyles style)
+        {
+            return new UInt256(System.Numerics.BigInteger.Parse("0" + value, style).ToByteArray());
+        }
+
+        public static UInt256 Parse(string value, IFormatProvider provider)
+        {
+            return new UInt256(System.Numerics.BigInteger.Parse("0" + value, provider).ToByteArray());
+        }
+
         public byte[] ToByteArray()
         {
             var buffer = new byte[32];
@@ -114,6 +144,11 @@
         public static bool operator ==(UInt256 left, UInt256 right)
         {
             return /*object.ReferenceEquals(left, right) || (!object.ReferenceEquals(left, null) && !object.ReferenceEquals(right, null) &&*/ left.part1 == right.part1 && left.part2 == right.part2 && left.part3 == right.part3 && left.part4 == right.part4/*)*/;
+        }
+
+        public static UInt256 operator %(UInt256 dividend, UInt256 divisor)
+        {
+            return new UInt256(dividend.ToBigInteger() % divisor.ToBigInteger());
         }
 
         public static bool operator !=(UInt256 left, UInt256 right)
