@@ -1,8 +1,8 @@
-﻿using System;
-using System.Text;
-
-namespace bsparser
+﻿namespace ReddStats.Core
 {
+    using System;
+    using System.Text;
+
     public class Base58
     {
         private const string ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";

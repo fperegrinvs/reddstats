@@ -1,18 +1,19 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core
 {
     using System;
-    using System.Collections.Generic;
 
     public class TxOutput
     {
-        public TxOutput(UInt64 value, List<byte> scriptPublicKey)
-        {
-            this.Value = value;
-            this.ScriptPublicKey = scriptPublicKey;
-        }
+        public int BlockId { get; set; }
 
-        public UInt64 Value { get; private set; }
+        public string TransactionId { get; set; }
 
-        public List<byte> ScriptPublicKey { get; private set; }
+        public int Index { get; set; }
+
+        public Decimal Value { get; set; }
+
+        public byte[] ScriptPublicKeyBinary { get; set; }
+
+        public string ScriptPublicKey { get; set; }
     }
 }

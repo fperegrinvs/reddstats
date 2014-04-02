@@ -3,6 +3,8 @@
     using System;
     using System.Diagnostics;
 
+    using ReddStats.Core;
+
     public class VersionedChecksummedBytes
     {
         protected int Version;

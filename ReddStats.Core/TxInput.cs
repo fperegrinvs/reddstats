@@ -1,9 +1,13 @@
 ﻿namespace ReddStats.Core
 {
-    using System.Collections.Generic;
-
     public class TxInput
     {
+        public int BlockId { get; set; }
+
+        public string TransactionId { get; set; }
+
+        public int Index { get; set; }
+
         public string  PreviousTxOutputKey { get; set; }
 
         public uint PreviousOutputIndex { get; set; }

@@ -21,7 +21,7 @@
 
             var sizeEstimate = inputs.Aggregate(0L, (current, t) => current + (t.ScriptSignature.Length / 2));
 
-            sizeEstimate = outputs.Aggregate(sizeEstimate, (current, t) => current + t.ScriptPublicKey.Count);
+            sizeEstimate = outputs.Aggregate(sizeEstimate, (current, t) => current + t.ScriptPublicKeyBinary.Length);
             sizeEstimate = (long)(sizeEstimate * 1.5);
             this.Size = sizeEstimate;
         }

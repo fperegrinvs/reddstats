@@ -2,11 +2,15 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Configuration;
+    using System.Data.SqlClient;
     using System.IO;
     using System.Linq;
     using System.Text;
 
     using bsparser;
+
+    using DapperExtensions;
 
     using OfficeOpenXml;
     using OfficeOpenXml.Style;
@@ -23,9 +27,9 @@
 
         protected List<Block> Blocks = new List<Block>();
 
-        protected Dictionary<string, ulong> Balances { get; set; }
+        protected Dictionary<string, decimal> Balances { get; set; }
 
-        protected Dictionary<string, ulong> NonzeroBalances { get; set; }
+        protected Dictionary<string, decimal> NonzeroBalances { get; set; }
 
         /// <summary>
         /// Source - Target
@@ -36,7 +40,7 @@
 
         protected List<Summary> History { get; set; }
 
-        protected Dictionary<string, Tuple<string, ulong>> Transactions { get; set; }
+        protected Dictionary<string, Tuple<string, decimal>> Transactions { get; set; }
 
         protected decimal TotalMoney { get; set; }
 
@@ -48,6 +52,18 @@
 
             while (this.ParseFile(i++))
             {
+            }
+        }
+
+        public void SaveDb()
+        {
+            using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["main"].ConnectionString))
+            {
+                connection.Open();
+                foreach (var block in Blocks)
+                {
+                    connection.Insert(block);
+                }
             }
         }
 
@@ -151,7 +167,7 @@
                     foreach (var secondary in this.LinkedAccountList[history.TopAccounts[a].Address])
                     {
                         // do not list insignificant addresses
-                        if (this.Balances[secondary] >= 100 * Divide)
+                        if (this.Balances[secondary] >= 100)
                         {
                             index++;
                             excel.Cells[13 + index, left].Value = secondary;
@@ -178,9 +194,9 @@
 
         public void ProcessBalances(bool linkAccount = false)
         {
-            this.Transactions = new Dictionary<string, Tuple<string, ulong>>();
-            this.Balances = new Dictionary<string, ulong>();
-            this.NonzeroBalances = new Dictionary<string, ulong>();
+            this.Transactions = new Dictionary<string, Tuple<string, decimal>>();
+            this.Balances = new Dictionary<string, decimal>();
+            this.NonzeroBalances = new Dictionary<string, decimal>();
             this.History = new List<Summary>();
             this.LinkedAccounts = new Dictionary<string, string>();
             this.LinkedAccountList = new Dictionary<string, HashSet<string>>();
@@ -240,7 +256,7 @@
                             }
 
                             var balance = this.Balances[debitAccount.Item1] -= debitAccount.Item2;
-                            this.TotalMoney -= debitAccount.Item2 / Divide;
+                            this.TotalMoney -= debitAccount.Item2;
 
                             if (balance == 0)
                             {
@@ -257,9 +273,9 @@
                             continue;
                         }
 
-                        var d = DataCalculator.GetToAddress(output.ScriptPublicKey.ToArray());
+                        var d = DataCalculator.GetToAddress(output.ScriptPublicKeyBinary);
 
-                        this.TotalMoney += t != 0 ? output.Value / Divide : output.Value;
+                        this.TotalMoney += output.Value;
 
                         if (this.Balances.ContainsKey(d))
                         {
@@ -272,7 +288,7 @@
                             this.NonzeroBalances[d] = output.Value;
                         }
 
-                        this.Transactions[trans.TransactionId + "#" + o] = new Tuple<string, ulong>(d, output.Value);
+                        this.Transactions[trans.TransactionId + "#" + o] = new Tuple<string, decimal>(d, output.Value);
 
                         o++;
                     }
@@ -327,7 +343,7 @@
                     balanceValue = this.LinkedAccountList[balance.Key].Aggregate(balanceValue, (current, secundary) => current + this.Balances[secundary]);
                 }
 
-                var delta = (balanceValue / Divide) - past;
+                var delta = (balanceValue) - past;
                 if (Math.Abs(delta) > 100)
                 {
                     summary.NonZero[balance.Key] = delta;
@@ -392,6 +408,11 @@
                     if (this.Blocks.Count > 0)
                     {
                         this.Blocks.Last().Hash = block.PreviousBlockHash;
+
+                        if (this.Blocks.Count > 1)
+                        {
+                            this.Blocks[this.Blocks.Count - 2].NextBlockHash = this.Blocks[this.Blocks.Count - 1].Hash;
+                        }
                     }
 
                     this.Blocks.Add(block);
@@ -446,7 +467,7 @@
                 var time = BitConverter.ToUInt32(headerBin, 68).ToDateTime(); // reader.Read4Bytes().ToDateTime();
                 var bits = BitConverter.ToUInt32(headerBin, 72).GetDifficulty();// reader.Read4Bytes().GetDifficulty();
                 var nonce = BitConverter.ToUInt32(headerBin, 76);// reader.Read4Bytes();
-                return new Block(version, previousBlock, merkleRoot, time, bits, nonce) { BlockId = blockHeight };
+                return new Block(version, previousBlock, merkleRoot, time, bits, nonce) { Id = blockHeight };
             }
         }
 
@@ -470,11 +491,14 @@
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
+                var value = reader.Read8Bytes();
+                var bytes = reader.ReadVarBytes();
                 return new TxOutput
-                (
-                    reader.Read8Bytes(),
-                    reader.ReadVarBytes().ToList()
-                );
+                {
+                    Value = value/ Divide,
+                    ScriptPublicKeyBinary = bytes,
+                    ScriptPublicKey = bytes.ToHexStringReverse()
+                };
             }
         }
 

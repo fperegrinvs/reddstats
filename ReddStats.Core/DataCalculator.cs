@@ -89,8 +89,8 @@
                 writer.WriteVarInt((UInt64)Outputs.Count);
                 foreach (var output in Outputs)
                 {
-                    writer.Write8Bytes(output.Value);
-                    writer.WriteVarBytes(output.ScriptPublicKey.ToArray());
+                    writer.Write8Bytes(Convert.ToUInt64(output.Value *  BlockParser.Divide));
+                    writer.WriteVarBytes(output.ScriptPublicKey);
                 }
                 writer.Write4Bytes(LockTime);
 
