@@ -4,13 +4,12 @@
     using System.Collections.Generic;
     using System.Configuration;
     using System.Data.SqlClient;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Text;
 
     using bsparser;
-
-    using DapperExtensions;
 
     using OfficeOpenXml;
     using OfficeOpenXml.Style;
@@ -66,29 +65,34 @@
 
         public void SaveDb()
         {
-            using (var connection = new SqlConnection(ConfigurationManager.ConnectionStrings["main"].ConnectionString))
-            {
-                connection.Open();
+            var t = 0;
+            var connection = new BlockChainDb();
                 foreach (var block in Blocks)
                 {
-                    connection.Insert(block);
+                    connection.Insert(block.Id.ToString(CultureInfo.InvariantCulture), "block", block);
 
                     foreach (var trans in block.Transactions)
                     {
-                        connection.Insert(trans);
+                        connection.Insert(trans.TransactionId, "transaction", trans);
 
-                        foreach (var output in trans.Outputs)
-                        {
-                            connection.Insert(output);
-                        }
 
-                        foreach (var input in trans.Inputs)
-                        {
-                            connection.Insert(input);
-                        }
+                        //foreach (var output in trans.Outputs)
+                        //{
+                        //    connection.Insert(output);
+                        //}"
+
+                        //foreach (var input in trans.Inputs)
+                        //{
+                        //    connection.Insert(input);
+                        //}
+                    }
+
+                    t += block.TransactionsCount;
+                    if (block.Id % 1000 == 0)
+                    {
+                        Console.WriteLine("Block: " + block.Id + "(" + t + " transactions)");
                     }
                 }
-            }
         }
 
         public void SaveFile(string filename)

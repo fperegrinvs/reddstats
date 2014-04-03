@@ -4,11 +4,15 @@
     using System.Collections.Generic;
     using System.Linq;
 
+    using ProtoBuf;
+
+    [ProtoContract]
     public class Block
     {
+
+        [ProtoMember(1)]
         public List<Transaction> Transactions { get; set; }
 
-        private readonly int hashCode;
 
         public Block(
             long version,
@@ -28,10 +32,17 @@
 
             this.Hash = hash ?? "";
 
-            this.hashCode = this.Hash.GetHashCode();
+            this.HashCode = this.Hash.GetHashCode();
         }
 
+        public Block()
+        {
+            
+        }
+
+        [ProtoMember(2)]
         public long Version { get; private set; }
+
 
         public decimal CoinsCreated
         {
@@ -41,18 +52,25 @@
             }
         }
 
+        [ProtoMember(3)]
         public string PreviousBlockHash { get; private set; }
 
+        [ProtoMember(4)]
         public string MerkleRoot { get; private set; }
 
+        [ProtoMember(5)]
         public DateTime Date { get; private set; }
 
+        [ProtoMember(6)]
         public double Difficulty { get; private set; }
 
+        [ProtoMember(7)]
         public long Nonce { get; private set; }
 
+        [ProtoMember(8)]
         public string Hash { get; set; }
 
+        [ProtoMember(9)]
         public string NextBlockHash { get; set; }
 
         public decimal Size
@@ -88,11 +106,15 @@
             }
         }
 
+        [ProtoMember(10)]
         public int Id { get; set; }
+
+        [ProtoMember(11)]
+        public int HashCode;
 
         public override int GetHashCode()
         {
-            return this.hashCode;
+            return this.HashCode;
         }
 
     }

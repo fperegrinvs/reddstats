@@ -6,6 +6,9 @@
 
     using bsparser;
 
+    using ProtoBuf;
+
+    [ProtoContract]
     public class Transaction
     {
         public Transaction(
@@ -46,6 +49,10 @@
             }
         }
 
+        public Transaction()
+        { }
+
+        [ProtoMember(1)]
         public int BlockId { get; set; }
 
         public int InputsCount
@@ -64,8 +71,11 @@
             }
         }
 
+        [ProtoMember(2)]
         public decimal TotalIn { get; set; }
 
+
+        [ProtoMember(3)]
         public decimal TotalOut { get; private set; }
 
         public decimal Fee
@@ -76,25 +86,33 @@
             }
         }
 
+        [ProtoMember(4)]
         public DateTime? Date { get; set; }
 
+
+        [ProtoMember(5)]
         public long Version { get; set; }
 
+
+        [ProtoMember(6)]
         public List<TransactionInput> Inputs { get; set; }
 
+        [ProtoMember(7)]
         public List<TransactionOutput> Outputs { get; set; }
 
+        [ProtoMember(8)]
         public long LockTime { get; set; }
 
         private string transactionId;
 
+        [ProtoMember(9)]
         public string TransactionId
         {
             get
             {
                 if (this.transactionId == null)
                 {
-                   this.transactionId =  DataCalculator.CalculateTransactionHash((uint)Version, Inputs, Outputs, (uint)LockTime).ToHexStringReverse();
+                    this.transactionId = DataCalculator.CalculateTransactionHash((uint)Version, Inputs, Outputs, (uint)LockTime).ToHexStringReverse();
                 }
 
                 return this.transactionId;
@@ -104,6 +122,8 @@
                 transactionId = value;
             }
         }
+
+        [ProtoMember(10)]
 
         public long Size { get; private set; }
     }

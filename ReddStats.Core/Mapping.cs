@@ -1,48 +1,39 @@
 ﻿namespace ReddStats.Core
 {
-    using DapperExtensions.Mapper;
+    using Lesula.Cassandra;
+    using Lesula.Cassandra.FrontEnd;
+    using Lesula.Cassandra.FrontEnd.Enumerators;
 
-    public sealed class BlockMapper : ClassMapper<Block>
+    using ReddStats.Practices;
+
+    public class Structure
     {
-        public BlockMapper()
+        public static void CreateStructure()
         {
-            Map(f => f.Id).Key(KeyType.Assigned);
-            Map(f => f.Transactions).Ignore();
-            AutoMap();
+            var connection = AquilesHelper.RetrieveCluster("ReddStats");
+            var manager = new KeyspaceManager(connection);
+            manager.AddKeyspace("blockchain", 1);
+
+            var famManager = new ColumnFamilyManager(connection, "blockchain");
+            famManager.TryAddColumnFamily("block", ColumnTypeEnum.Standard, ComparatorTypeEnum.UTF8Type);
+            famManager.TryAddColumnFamily("transaction", ColumnTypeEnum.Standard, ComparatorTypeEnum.UTF8Type);
         }
     }
 
-    public sealed class TransactionMapper : ClassMapper<Transaction>
+    public class BlockChainDb : CassandraDalcBase
     {
-        public TransactionMapper()
+        public BlockChainDb()
         {
-            Map(f => f.TransactionId).Key(KeyType.Assigned);
-            Map(f => f.Inputs).Ignore();
-            Map(f => f.Outputs).Ignore();
-            AutoMap();
+            this.Keyspace = "blockchain";
+            mutator = this.CreateMutator();
         }
-    }
 
-    public sealed class InputTransactionMapper : ClassMapper<TransactionInput>
-    {
-        public InputTransactionMapper()
-        {
-            Map(f => f.TransactionId).Key(KeyType.Assigned);
-            Map(f => f.Index).Key(KeyType.Assigned);
-            Map(f => f.PreviousTxReference).Ignore();
-            Map(f => f.PreviousTxOutputKeyBinary).Ignore();
-            AutoMap();
-        }
-    }
+        private readonly Mutator mutator;
 
-    public sealed class OutputTransactionMapper : ClassMapper<TransactionOutput>
-    {
-        public OutputTransactionMapper()
+        public void Insert<T>(string key, string family, T value) where T : new()
         {
-            Map(f => f.TransactionId).Key(KeyType.Assigned);
-            Map(f => f.Index).Key(KeyType.Assigned);
-            Map(f => f.ScriptPublicKeyBinary).Ignore();
-            AutoMap();
+            var data = value.SerializeProtobuf().CompressLZ4();
+            mutator.InsertColumn(family, key, mutator.NewColumn("D", data), this.ConsistencyLevel);
         }
     }
 
