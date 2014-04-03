@@ -9,44 +9,82 @@
     public class Transaction
     {
         public Transaction(
-            UInt32 version,
-            List<TxInput> inputs,
-            List<TxOutput> outputs,
-            UInt32 lockTime)
+            long version,
+            List<TransactionInput> inputs,
+            List<TransactionOutput> outputs,
+            long lockTime,
+            int blockId)
         {
             this.Version = version;
             this.Inputs = inputs;
             this.Outputs = outputs;
             this.LockTime = lockTime;
-
+            this.BlockId = blockId;
             var sizeEstimate = inputs.Aggregate(0L, (current, t) => current + (t.ScriptSignature.Length / 2));
 
             sizeEstimate = outputs.Aggregate(sizeEstimate, (current, t) => current + t.ScriptPublicKeyBinary.Length);
             sizeEstimate = (long)(sizeEstimate * 1.5);
             this.Size = sizeEstimate;
+
+            this.TotalOut = 0M;
+            this.TotalIn = 0M;
+
+            for (var k = 0; k < inputs.Count; k++)
+            {
+                inputs[k].Index = k;
+                inputs[k].TransactionId = TransactionId;
+                inputs[k].BlockId = BlockId;
+                TotalIn += inputs[k].Amount;
+            }
+
+            for (var k = 0; k < outputs.Count; k++)
+            {
+                outputs[k].Index = k;
+                outputs[k].TransactionId = TransactionId;
+                outputs[k].BlockId = BlockId;
+                TotalOut += outputs[k].Amount;
+            }
         }
 
         public int BlockId { get; set; }
 
-        public uint InputsCount { get; set; }
+        public int InputsCount
+        {
+            get
+            {
+                return Inputs.Count;
+            }
+        }
 
-        public uint OutputsCount { get; set; }
+        public int OutputsCount
+        {
+            get
+            {
+                return Outputs.Count;
+            }
+        }
 
         public decimal TotalIn { get; set; }
 
-        public decimal TotalOut { get; set; }
+        public decimal TotalOut { get; private set; }
 
-        public decimal Fee { get; set; }
+        public decimal Fee
+        {
+            get
+            {
+                return TotalIn == 0 ? 0M : TotalIn - TotalOut;
+            }
+        }
 
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
 
-        public uint Version { get; set; }
+        public long Version { get; set; }
 
-        public List<TxInput> Inputs { get; set; }
+        public List<TransactionInput> Inputs { get; set; }
 
-        public List<TxOutput> Outputs { get; set; }
+        public List<TransactionOutput> Outputs { get; set; }
 
-        public UInt32 LockTime { get; set; }
+        public long LockTime { get; set; }
 
         private string transactionId;
 
@@ -56,7 +94,7 @@
             {
                 if (this.transactionId == null)
                 {
-                   this.transactionId =  DataCalculator.CalculateTransactionHash(Version, Inputs, Outputs, LockTime).ToHexStringReverse();
+                   this.transactionId =  DataCalculator.CalculateTransactionHash((uint)Version, Inputs, Outputs, (uint)LockTime).ToHexStringReverse();
                 }
 
                 return this.transactionId;
@@ -67,11 +105,6 @@
             }
         }
 
-        public long Size { get; set; }
-
-        public void CalculateMetadata()
-        {
-            
-        }
+        public long Size { get; private set; }
     }
 }

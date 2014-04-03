@@ -61,8 +61,8 @@
 
         public static byte[] CalculateTransactionHash(
             UInt32 Version,
-            List<TxInput> Inputs,
-            List<TxOutput> Outputs,
+            List<TransactionInput> Inputs,
+            List<TransactionOutput> Outputs,
             UInt32 LockTime)
         {
             return DoubleSHA256(EncodeTransaction(Version, Inputs, Outputs, LockTime));
@@ -70,8 +70,8 @@
 
         public static byte[] EncodeTransaction(
             UInt32 Version,
-            List<TxInput> Inputs,
-            List<TxOutput> Outputs,
+            List<TransactionInput> Inputs,
+            List<TransactionOutput> Outputs,
             UInt32 LockTime)
         {
             using (var stream = new MemoryStream())
@@ -82,14 +82,14 @@
                 foreach (var input in Inputs)
                 {
                     writer.Write(input.PreviousTxOutputKeyBinary);
-                    writer.Write4Bytes(input.PreviousOutputIndex);
+                    writer.Write4Bytes((uint)input.PreviousOutputIndex);
                     writer.WriteVarBytes(input.ScriptSignature);
-                    writer.Write4Bytes(input.Sequence);
+                    writer.Write4Bytes((uint)input.Sequence);
                 }
                 writer.WriteVarInt((UInt64)Outputs.Count);
                 foreach (var output in Outputs)
                 {
-                    writer.Write8Bytes(Convert.ToUInt64(output.Value *  BlockParser.Divide));
+                    writer.Write8Bytes(Convert.ToUInt64(output.Amount *  BlockParser.Divide));
                     writer.WriteVarBytes(output.ScriptPublicKey);
                 }
                 writer.Write4Bytes(LockTime);

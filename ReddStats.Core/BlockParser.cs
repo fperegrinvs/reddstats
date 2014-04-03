@@ -15,7 +15,9 @@
     using OfficeOpenXml;
     using OfficeOpenXml.Style;
 
-    public class BlockParser
+    using ReddStats.Core.Interface;
+
+    public class BlockParser : ITransactionProvider
     {
         public const long End = 0xdbb6c0fb;
 
@@ -26,6 +28,8 @@
         protected string CurrentFile { get; set; }
 
         protected List<Block> Blocks = new List<Block>();
+
+        protected Dictionary<string, Transaction> Transactions { get; set; } 
 
         protected Dictionary<string, decimal> Balances { get; set; }
 
@@ -40,11 +44,16 @@
 
         protected List<Summary> History { get; set; }
 
-        protected Dictionary<string, Tuple<string, decimal>> Transactions { get; set; }
+        protected Dictionary<string, Tuple<string, decimal>> OutputTransactions { get; set; }
 
         protected decimal TotalMoney { get; set; }
 
         protected const int SnapInterval = 60 * 24 * 7;
+
+        public BlockParser()
+        {
+            Transactions = new Dictionary<string, Transaction>();
+        }
 
         public void ParseChain()
         {
@@ -63,6 +72,21 @@
                 foreach (var block in Blocks)
                 {
                     connection.Insert(block);
+
+                    foreach (var trans in block.Transactions)
+                    {
+                        connection.Insert(trans);
+
+                        foreach (var output in trans.Outputs)
+                        {
+                            connection.Insert(output);
+                        }
+
+                        foreach (var input in trans.Inputs)
+                        {
+                            connection.Insert(input);
+                        }
+                    }
                 }
             }
         }
@@ -194,7 +218,7 @@
 
         public void ProcessBalances(bool linkAccount = false)
         {
-            this.Transactions = new Dictionary<string, Tuple<string, decimal>>();
+            this.OutputTransactions = new Dictionary<string, Tuple<string, decimal>>();
             this.Balances = new Dictionary<string, decimal>();
             this.NonzeroBalances = new Dictionary<string, decimal>();
             this.History = new List<Summary>();
@@ -209,17 +233,17 @@
                 var t = 0;
                 foreach (var trans in block.Transactions)
                 {
-                    foreach (TxInput input in trans.Inputs)
+                    foreach (TransactionInput input in trans.Inputs)
                     {
                         if (t == 0) // generation
                         {
                             continue;
                         }
 
-                        if (!string.IsNullOrEmpty(input.PreviousTxOutputKey))
+                        if (!string.IsNullOrEmpty(input.PreviousOutputKey))
                         {
                             var key = input.PreviousTxReference;
-                            var debitAccount = this.Transactions[key];
+                            var debitAccount = this.OutputTransactions[key];
 
                             // transaction with multiple inputs. Should I link the accounts or this is already a master account ?
                             if (linkAccount && trans.Inputs.Count > 1 && !this.LinkedAccountList.ContainsKey(debitAccount.Item1))
@@ -233,7 +257,7 @@
                                 else
                                 {
                                     var mainAccountTransactionCandidate = trans.Inputs[0].PreviousTxReference;
-                                    var mainAccountAddressCandidate = this.Transactions[mainAccountTransactionCandidate].Item1;
+                                    var mainAccountAddressCandidate = this.OutputTransactions[mainAccountTransactionCandidate].Item1;
 
                                     // if main account candidate point to other account, the pointed account is the real main
                                     mainAccountAddress = this.LinkedAccounts.ContainsKey(mainAccountAddressCandidate)
@@ -268,30 +292,31 @@
                     var o = 0;
                     foreach (var output in trans.Outputs)
                     {
-                        if (output.Value == 0 && t == 0 && o == trans.Outputs.Count - 1)
+                        if (output.Amount == 0 && t == 0 && o == trans.Outputs.Count - 1)
                         {
                             continue;
                         }
 
-                        var d = DataCalculator.GetToAddress(output.ScriptPublicKeyBinary);
+                        this.TotalMoney += output.Amount;
 
-                        this.TotalMoney += output.Value;
-
-                        if (this.Balances.ContainsKey(d))
+                        if (this.Balances.ContainsKey(output.ToAddress))
                         {
-                            var balance = this.Balances[d] += output.Value;
-                            this.NonzeroBalances[d] = balance;
+                            var balance = this.Balances[output.ToAddress] += output.Amount;
+                            this.NonzeroBalances[output.ToAddress] = balance;
                         }
                         else
                         {
-                            this.Balances[d] = output.Value;
-                            this.NonzeroBalances[d] = output.Value;
+                            this.Balances[output.ToAddress] = output.Amount;
+                            this.NonzeroBalances[output.ToAddress] = output.Amount;
                         }
 
-                        this.Transactions[trans.TransactionId + "#" + o] = new Tuple<string, decimal>(d, output.Value);
+                        this.OutputTransactions[trans.TransactionId + "#" + o] = new Tuple<string, decimal>(output.ToAddress, output.Amount);
 
                         o++;
                     }
+
+
+                    Transactions[trans.TransactionId] = trans;
 
                     t++;
                 }
@@ -381,7 +406,7 @@
 
 
             summary.TotalAddresses = (ulong)this.Balances.Count;
-            summary.TotalTransactions = isDiff ? this.Transactions.Count - pastSummary.TotalTransactions : this.Transactions.Count;
+            summary.TotalTransactions = isDiff ? this.OutputTransactions.Count - pastSummary.TotalTransactions : this.OutputTransactions.Count;
             summary.Top10Total = summary.TopAccounts.Take(10).Sum(x => x.Balance);
             summary.Top100Total = summary.TopAccounts.Take(100).Sum(x => x.Balance);
             return summary;
@@ -401,7 +426,7 @@
             Block block;
             do
             {
-                block = ReadBlock(stream, this.Blocks.Count);
+                block = ReadBlock(stream, this.Blocks.Count, this);
 
                 if (block != null)
                 {
@@ -423,7 +448,7 @@
             return true;
         }
 
-        private static Block ReadBlock(Stream stream, int blockHeight)
+        private static Block ReadBlock(Stream stream, int blockHeight, ITransactionProvider provider)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
@@ -439,7 +464,7 @@
                     return null;
                 }
 
-                var transactions = reader.DecodeList(() => DecodeTransaction(stream, blockHeight));
+                var transactions = reader.DecodeList(() => DecodeTransaction(stream, blockHeight, provider));
 
                 block.Transactions = transactions;
 
@@ -471,47 +496,92 @@
             }
         }
 
-        private static TxInput DecodeTxInput(Stream stream)
+        private static TransactionInput DecodeTxInput(Stream stream, ITransactionProvider transactionProvider)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
                 var keyBytes = reader.ReadBytes(32);
-                return new TxInput
+                var txInput = new TransactionInput
                        {
-                           PreviousTxOutputKey = keyBytes.ToHexStringReverse(),
+                           PreviousOutputKey = keyBytes.ToHexStringReverse(),
                            PreviousTxOutputKeyBinary = keyBytes,
-                           PreviousOutputIndex = reader.Read4Bytes(),
+                           PreviousOutputIndex = (int)reader.Read4Bytes(),
                            ScriptSignature = reader.ReadVarBytes().ToHexStringReverse(),
                            Sequence = reader.Read4Bytes()
                        };
+
+                var origin = transactionProvider.GetTransactionOutput(
+                    txInput.PreviousOutputKey,
+                    txInput.PreviousOutputIndex);
+
+                if (origin != null)
+                {
+                    txInput.Amount = origin.Amount;
+                    txInput.FromAddress = origin.ToAddress;
+                }
+
+                return txInput;
             }
         }
 
-        private static TxOutput DecodeTxOutput(Stream stream)
+        private static TransactionOutput DecodeTxOutput(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
                 var value = reader.Read8Bytes();
                 var bytes = reader.ReadVarBytes();
-                return new TxOutput
+                return new TransactionOutput
                 {
-                    Value = value/ Divide,
+                    Amount = value/ Divide,
                     ScriptPublicKeyBinary = bytes,
                     ScriptPublicKey = bytes.ToHexStringReverse()
                 };
             }
         }
 
-        private static Transaction DecodeTransaction(Stream stream, int blockId)
+        private static Transaction DecodeTransaction(Stream stream, int blockId, ITransactionProvider transactionProvider)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
-                return new Transaction(
+                var transaction = new Transaction(
                     reader.Read4Bytes(),
-                    reader.DecodeList(() => DecodeTxInput(stream)),
+                    reader.DecodeList(() => DecodeTxInput(stream, transactionProvider)),
                     reader.DecodeList(() => DecodeTxOutput(stream)),
-                    reader.Read4Bytes()) { BlockId = blockId };
+                    reader.Read4Bytes(), blockId);
+
+                transactionProvider.SaveTransaction(transaction);
+                return transaction;
             }
+        }
+
+        public TransactionOutput GetTransactionOutput(string transactionId, int order)
+        {
+            if (order < 0)
+            {
+                return null;
+            }
+
+            return Transactions[transactionId].Outputs[order];
+        }
+
+        public TransactionInput GetTransactionInput(string transactionId, int order)
+        {
+            if (order < 0)
+            {
+                return null;
+            }
+
+            return Transactions[transactionId].Inputs[order];
+        }
+
+        public Transaction GetTransaction(string transactionId)
+        {
+            return Transactions[transactionId];
+        }
+
+        public void SaveTransaction(Transaction transaction)
+        {
+            Transactions[transaction.TransactionId] = transaction;
         }
     }
 }

@@ -64,7 +64,8 @@
   <ItemGroup>
     <Compile Include="Block.cs" />
     <Compile Include="BlockParser.cs" />
-    <Compile Include="Database.cs" />
+    <Compile Include="Interface\ITransactionProvider.cs" />
+    <Compile Include="Mapping.cs" />
     <Compile Include="DataCalculator.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="Program.cs" />
@@ -74,9 +75,8 @@
     <Compile Include="SimpleAccount.cs" />
     <Compile Include="Summary.cs" />
     <Compile Include="Transaction.cs" />
-    <Compile Include="TxInput.cs" />
-    <Compile Include="TxOutput.cs" />
-    <Compile Include="TxOutputKey.cs" />
+    <Compile Include="TransactionInput.cs" />
+    <Compile Include="TransactionOutput.cs" />
     <Compile Include="UInt256.cs" />
     <Compile Include="Base58.cs" />
     <Compile Include="VersionedChecksummedBytes.cs" />
@@ -86,9 +86,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="VO\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

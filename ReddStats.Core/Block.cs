@@ -11,12 +11,12 @@
         private readonly int hashCode;
 
         public Block(
-            UInt32 version,
+            long version,
             string previousBlockHash,
             string merkleRoot,
             DateTime date,
             double difficulty,
-            UInt32 nonce,
+            long nonce,
             string hash = null)
         {
             this.Version = version;
@@ -37,7 +37,7 @@
         {
             get
             {
-                return this.Transactions[0].Outputs[0].Value;
+                return this.Transactions[0].Outputs[0].Amount;
             }
         }
 
@@ -67,7 +67,7 @@
         {
             get
             {
-                return Transactions.Sum(t => t.Outputs.Sum(o => o.Value));
+                return Transactions.Sum(t => t.Outputs.Sum(o => o.Amount));
             }
         }
 

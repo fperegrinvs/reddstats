@@ -1,6 +1,6 @@
 ﻿namespace ReddStats.Core
 {
-    public class TxInput
+    public class TransactionInput
     {
         public int BlockId { get; set; }
 
@@ -8,15 +8,20 @@
 
         public int Index { get; set; }
 
-        public string  PreviousTxOutputKey { get; set; }
+        public string  PreviousOutputKey { get; set; }
 
-        public uint PreviousOutputIndex { get; set; }
+        public int PreviousOutputIndex { get; set; }
 
         public string ScriptSignature { get; set; }
 
-        public uint Sequence { get; set; }
+        public string FromAddress { get; set; }
+
+        public long Sequence { get; set; }
+
+        public decimal Amount { get; set; }
 
         public byte[] PreviousTxOutputKeyBinary { get; set; }
+
 
         private string previouTxReference;
 
@@ -26,7 +31,7 @@
             {
                 if (previouTxReference == null)
                 {
-                    previouTxReference = PreviousTxOutputKey + "#" + PreviousOutputIndex;
+                    previouTxReference = this.PreviousOutputKey + "#" + PreviousOutputIndex;
                 }
 
                 return previouTxReference;
