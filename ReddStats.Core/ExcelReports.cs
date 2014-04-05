@@ -4,8 +4,6 @@ namespace ReddStats.Core
 {
     using System.IO;
 
-    using bsparser;
-
     using OfficeOpenXml;
     using OfficeOpenXml.Style;
 

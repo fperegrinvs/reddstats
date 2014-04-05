@@ -3,6 +3,7 @@
     using System.Collections.Generic;
 
     using ReddStats.Core.Interface;
+    using ReddStats.Core.VO;
 
     public class MemoryProvider : IBlockChainDataProvider
     {

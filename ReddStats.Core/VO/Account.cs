@@ -7,6 +7,12 @@
     [ProtoContract]
     public class Account
     {
+        public Account()
+        {
+            RelatedAccounts = new HashSet<string>();
+            Transactions = new List<AccountTransaction>();
+        }
+
         [ProtoMember(1)]
         public string Address { get; set; }
 
@@ -17,6 +23,6 @@
         public decimal Balance { get; set; }
 
         [ProtoMember(4)]
-        public List<string> RelatedAccounts { get; set; }
+        public HashSet<string> RelatedAccounts { get; set; }
     }
 }

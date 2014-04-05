@@ -6,6 +6,8 @@
 
     using ProtoBuf;
 
+    using ReddStats.Core.VO;
+
     [ProtoContract]
     public class Block
     {

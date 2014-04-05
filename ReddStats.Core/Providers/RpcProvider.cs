@@ -4,11 +4,10 @@ namespace ReddStats.Core.Providers
 {
     using System.IO;
 
-    using bsparser;
-
     using ReddStats.Core.Interface;
     using ReddStats.Core.Parser;
     using ReddStats.Core.RPC;
+    using ReddStats.Core.VO;
 
     public class RpcProvider : IBlockChainDataProvider
     {

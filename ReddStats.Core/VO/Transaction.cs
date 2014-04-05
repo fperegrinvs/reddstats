@@ -1,10 +1,8 @@
-﻿namespace ReddStats.Core
+﻿namespace ReddStats.Core.VO
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
-    using bsparser;
 
     using ProtoBuf;
 
@@ -37,17 +35,17 @@
             for (var k = 0; k < inputs.Count; k++)
             {
                 inputs[k].Index = k;
-                inputs[k].TransactionId = TransactionId;
-                inputs[k].BlockId = BlockId;
-                TotalIn += inputs[k].Amount;
+                inputs[k].TransactionId = this.TransactionId;
+                inputs[k].BlockId = this.BlockId;
+                this.TotalIn += inputs[k].Amount;
             }
 
             for (var k = 0; k < outputs.Count; k++)
             {
                 outputs[k].Index = k;
-                outputs[k].TransactionId = TransactionId;
-                outputs[k].BlockId = BlockId;
-                TotalOut += outputs[k].Amount;
+                outputs[k].TransactionId = this.TransactionId;
+                outputs[k].BlockId = this.BlockId;
+                this.TotalOut += outputs[k].Amount;
             }
         }
 
@@ -61,7 +59,7 @@
         {
             get
             {
-                return Inputs.Count;
+                return this.Inputs.Count;
             }
         }
 
@@ -69,7 +67,7 @@
         {
             get
             {
-                return Outputs.Count;
+                return this.Outputs.Count;
             }
         }
 
@@ -84,7 +82,7 @@
         {
             get
             {
-                return TotalIn == 0 ? 0M : TotalIn - TotalOut;
+                return this.TotalIn == 0 ? 0M : this.TotalIn - this.TotalOut;
             }
         }
 
@@ -114,14 +112,14 @@
             {
                 if (this.transactionId == null)
                 {
-                    this.transactionId = DataCalculator.CalculateTransactionHash((uint)Version, Inputs, Outputs, (uint)LockTime).ToHexStringReverse();
+                    this.transactionId = DataCalculator.CalculateTransactionHash((uint)this.Version, this.Inputs, this.Outputs, (uint)this.LockTime).ToHexStringReverse();
                 }
 
                 return this.transactionId;
             }
             set
             {
-                transactionId = value;
+                this.transactionId = value;
             }
         }
 

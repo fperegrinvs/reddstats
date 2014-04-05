@@ -4,8 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
 
-    using bsparser;
-
     using ReddStats.Core.VO;
 
     public static class DataProcessor
@@ -51,6 +49,13 @@
                             {
                                 var mainAccount = consolidated.RelatedAccounts.GetMainAccount(trans.Inputs[1].FromAddress);
                                 consolidated.RelatedAccounts.AddRelatedAccount(mainAccount, input.FromAddress);
+
+                                if (!consolidated.Accounts.ContainsKey(mainAccount))
+                                {
+                                    consolidated.Accounts[mainAccount] = new Account();
+                                }
+
+                                consolidated.Accounts[mainAccount].RelatedAccounts = consolidated.RelatedAccounts.LinkedAccountList[mainAccount];
                             }
 
                             if (consolidated.AccountBalances.ContainsKey(input.FromAddress))
@@ -60,9 +65,19 @@
                             else
                             {
                                 consolidated.AccountBalances[input.FromAddress] = input.Amount;
+                                consolidated.Accounts[input.FromAddress] = new Account();
                             }
 
                             consolidated.TotalMoney -= input.Amount;
+                            consolidated.Accounts[input.FromAddress].Transactions.Add(new AccountTransaction
+                                                                                      {
+                                                                                          BlockId = block.Id,
+                                                                                          TransactionId = trans.TransactionId,
+                                                                                          Date = block.Date,
+                                                                                          TransactionType = TransactionTypeEnum.Output,
+                                                                                          TransactionIndex = input.Index,
+                                                                                          Value = input.Amount
+                                                                                      });
                         }
                     }
 
@@ -81,10 +96,22 @@
                         else
                         {
                             consolidated.AccountBalances[output.ToAddress] = output.Amount;
+                            consolidated.Accounts[output.ToAddress] = new Account();
                         }
 
                         consolidated.TotalMoney += output.Amount;
                         consolidated.TotalTransactionsValue += output.Amount;
+
+                        consolidated.Accounts[output.ToAddress].Transactions.Add(new AccountTransaction
+                        {
+                            BlockId = block.Id,
+                            TransactionId = trans.TransactionId,
+                            Date = block.Date,
+                            TransactionType = TransactionTypeEnum.Output,
+                            TransactionIndex = output.Index,
+                            Value = output.Amount
+                        });
+
                         o++;
                     }
 

@@ -7,9 +7,8 @@
     using System.Text;
     using System.Threading;
 
-    using bsparser;
-
     using ReddStats.Core;
+    using ReddStats.Core.VO;
 
     public static class DataCalculator
     {

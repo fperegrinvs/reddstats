@@ -1,4 +1,4 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core.VO
 {
     public class SimpleAccount
     {

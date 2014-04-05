@@ -5,12 +5,13 @@
     using System.Text;
 
     using ReddStats.Core.Interface;
+    using ReddStats.Core.VO;
 
     public static class BlockParser
     {
         public const decimal Divide = 100000000M;
 
-        internal static Block ReadBlock(Stream stream, int blockHeight, IBlockChainDataProvider provider)
+        public static Block ReadBlock(Stream stream, int blockHeight, IBlockChainDataProvider provider)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {

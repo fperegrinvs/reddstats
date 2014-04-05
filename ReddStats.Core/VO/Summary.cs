@@ -1,4 +1,4 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core.VO
 {
     using System.Collections.Generic;
 
@@ -28,7 +28,7 @@
         {
             get
             {
-                return TotalMoney / TopAccounts.Count;
+                return this.TotalMoney / this.TopAccounts.Count;
             } 
         }
 

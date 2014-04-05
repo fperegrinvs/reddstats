@@ -5,8 +5,6 @@
     using System.IO;
     using System.Linq;
 
-    using bsparser;
-
     public static class ReaderExtensionMethods
     {
         public static List<T> DecodeList<T>(this BinaryReader reader, Func<T> decode)

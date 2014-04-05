@@ -5,6 +5,7 @@ namespace ReddStats.Core.Providers
     using System.Globalization;
 
     using ReddStats.Core.Interface;
+    using ReddStats.Core.VO;
 
     public class CassandraProvider : IBlockChainDataProvider
     {

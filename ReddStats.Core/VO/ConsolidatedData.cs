@@ -1,6 +1,7 @@
 ﻿namespace ReddStats.Core.VO
 {
     using System.Collections.Generic;
+    using System.Linq;
 
     using ProtoBuf;
 
@@ -27,5 +28,10 @@
 
         [ProtoIgnore]
         public RelatedAccounts RelatedAccounts { get; set; }
+
+        public void RemoveZeroBalances()
+        {
+            AccountBalances = AccountBalances.Where(a => a.Value == 0M).ToDictionary(a => a.Key, b => b.Value);
+        }
     }
 }

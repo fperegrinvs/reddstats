@@ -1,5 +1,7 @@
 ﻿namespace ReddStats.Core.Interface
 {
+    using ReddStats.Core.VO;
+
     public interface IBlockChainDataProvider
     {
         int GetBlockCount();

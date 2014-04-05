@@ -1,8 +1,6 @@
-﻿namespace ReddStats.Core
+﻿namespace ReddStats.Core.VO
 {
     using System;
-
-    using bsparser;
 
     using ProtoBuf;
 
@@ -36,23 +34,23 @@
         {
             get
             {
-                if (toAddress == null)
+                if (this.toAddress == null)
                 {
-                    if (Amount > 0)
+                    if (this.Amount > 0)
                     {
-                        toAddress = DataCalculator.GetToAddress(this.ScriptPublicKeyBinary);
+                        this.toAddress = DataCalculator.GetToAddress(this.ScriptPublicKeyBinary);
                     }
                     else
                     {
-                        toAddress = "Unknown";
+                        this.toAddress = "Unknown";
                     }
                 }
 
-                return toAddress;
+                return this.toAddress;
             }
             set
             {
-                toAddress = value;
+                this.toAddress = value;
             }
         }
     }
