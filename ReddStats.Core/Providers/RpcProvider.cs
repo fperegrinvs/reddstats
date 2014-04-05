@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ReddStats.Core.Providers
 {
@@ -11,6 +7,7 @@ namespace ReddStats.Core.Providers
     using bsparser;
 
     using ReddStats.Core.Interface;
+    using ReddStats.Core.Parser;
     using ReddStats.Core.RPC;
 
     public class RpcProvider : ITransactionProvider, IBlockProvider

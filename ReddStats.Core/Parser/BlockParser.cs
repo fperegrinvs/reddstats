@@ -1,4 +1,4 @@
-﻿namespace ReddStats.Core
+﻿namespace ReddStats.Core.Parser
 {
     using System;
     using System.Collections.Generic;
@@ -14,15 +14,9 @@
 
     using ReddStats.Core.Interface;
 
-    public class BlockParser : ITransactionProvider
+    public class BlockParser
     {
-        public const long End = 0xdbb6c0fb;
-
         public const decimal Divide = 100000000M;
-
-        public const string BlockPath = "E:\\Reddcoin\\Blockchain\\blocks\\blk$n$.dat";
-
-        protected string CurrentFile { get; set; }
 
         protected List<Block> Blocks = new List<Block>();
 
@@ -42,30 +36,20 @@
         protected List<Summary> History { get; set; }
 
         protected Dictionary<string, Tuple<string, decimal>> OutputTransactions { get; set; }
-        private readonly BlockChainDb db = new BlockChainDb();
         protected decimal TotalMoney { get; set; }
 
         protected const int SnapInterval = 60 * 24 * 7;
 
         public BlockParser()
         {
-            Transactions = new Dictionary<string, Transaction>();
-        }
-
-        public void ParseChain()
-        {
-            int i = 0;
-
-            while (this.ParseFile(i++))
-            {
-            }
+            this.Transactions = new Dictionary<string, Transaction>();
         }
 
         public void SaveDb()
         {
             var t = 0;
             var connection = new BlockChainDb();
-                foreach (var block in Blocks)
+                foreach (var block in this.Blocks)
                 {
                     connection.Insert(block.Id.ToString(CultureInfo.InvariantCulture), "block", block);
 
@@ -307,7 +291,7 @@
                     }
 
 
-                    Transactions[trans.TransactionId] = trans;
+                    this.Transactions[trans.TransactionId] = trans;
 
                     t++;
                 }
@@ -403,42 +387,6 @@
             return summary;
         }
 
-        private bool ParseFile(int order)
-        {
-            this.CurrentFile = BlockPath.Replace("$n$", order.ToString("D5"));
-            if (!File.Exists(this.CurrentFile))
-            {
-                return false;
-            }
-
-            var stream = new FileStream(this.CurrentFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-
-
-            Block block;
-            do
-            {
-                block = ReadBlock(stream, this.Blocks.Count, this);
-
-                if (block != null)
-                {
-                    if (this.Blocks.Count > 0)
-                    {
-                        this.Blocks.Last().Hash = block.PreviousBlockHash;
-
-                        if (this.Blocks.Count > 1)
-                        {
-                            this.Blocks[this.Blocks.Count - 2].NextBlockHash = this.Blocks[this.Blocks.Count - 1].Hash;
-                        }
-                    }
-
-                    this.Blocks.Add(block);
-                }
-            }
-            while (block != null);
-
-            return true;
-        }
-
         internal static Block ReadBlock(Stream stream, int blockHeight, ITransactionProvider provider)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
@@ -468,7 +416,7 @@
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
                 var magic = reader.Read4Bytes();
-                if (magic == Script.packetMagic)
+                if (magic == Script.PacketMagic)
                 {
                     reader.Read4Bytes(); // size
                 }
@@ -551,52 +499,6 @@
                 transactionProvider.SaveTransaction(transaction);
                 return transaction;
             }
-        }
-
-        public TransactionOutput GetTransactionOutput(string transactionId, int order)
-        {
-            if (order < 0)
-            {
-                return null;
-            }
-
-            if (!Transactions.ContainsKey(transactionId))
-            {
-                Transactions[transactionId] = db.Get<Transaction>(transactionId, "transaction");
-            }
-
-            return Transactions[transactionId].Outputs[order];
-        }
-
-        public TransactionInput GetTransactionInput(string transactionId, int order)
-        {
-            if (order < 0)
-            {
-                return null;
-            }
-
-            if (!Transactions.ContainsKey(transactionId))
-            {
-                Transactions[transactionId] = db.Get<Transaction>(transactionId, "transaction");
-            }
-
-            return Transactions[transactionId].Inputs[order];
-        }
-
-        public Transaction GetTransaction(string transactionId)
-        {
-            if (!Transactions.ContainsKey(transactionId))
-            {
-                Transactions[transactionId] = db.Get<Transaction>(transactionId, "transaction");
-            }
-
-            return Transactions[transactionId];
-        }
-
-        public void SaveTransaction(Transaction transaction)
-        {
-            Transactions[transaction.TransactionId] = transaction;
-            db.Insert(transaction.TransactionId, "transaction", transaction);
         }
     }
 }

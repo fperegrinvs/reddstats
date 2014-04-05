@@ -16,7 +16,8 @@
         public const int OP_HASH160 = 169;
         public const int OP_EQUALVERIFY = 136;
         public const int OP_CHECKSIG = 172;
-        public const long packetMagic = 0xfbc0b6db;
+        public const uint PacketMagic = 0xdbb6c0fb;
+
         /** First byte of a base58 encoded address. See {@link Address}*/
         public const int addressHeader = 61;
 

@@ -8,6 +8,7 @@
     using System.Threading;
 
     using ReddStats.Core;
+    using ReddStats.Core.Parser;
 
     public static class DataCalculator
     {

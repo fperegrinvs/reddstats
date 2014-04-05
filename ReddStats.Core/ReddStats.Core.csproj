@@ -66,33 +66,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Block.cs" />
-    <Compile Include="BlockParser.cs" />
-    <Compile Include="DBSync.cs" />
+    <Compile Include="FileReader.cs" />
+    <Compile Include="VO\Block.cs" />
+    <Compile Include="Parser\BlockParser.cs" />
     <Compile Include="Interface\IBlockProvider.cs" />
     <Compile Include="Interface\ITransactionProvider.cs" />
-    <Compile Include="Mapping.cs" />
-    <Compile Include="DataCalculator.cs" />
-    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Parser\Mapping.cs" />
+    <Compile Include="Parser\DataCalculator.cs" />
+    <Compile Include="Parser\ExtensionMethods.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\CassandraProvider.cs" />
     <Compile Include="Providers\MemoryProvider.cs" />
     <Compile Include="Providers\RpcProvider.cs" />
-    <Compile Include="ReaderExtensionMethods.cs" />
+    <Compile Include="Parser\ReaderExtensionMethods.cs" />
     <Compile Include="RPC\GetBlockResponse.cs" />
     <Compile Include="RPC\RpcClient.cs" />
     <Compile Include="RPC\RpcRequest.cs" />
-    <Compile Include="Script.cs" />
-    <Compile Include="SimpleAccount.cs" />
-    <Compile Include="Summary.cs" />
-    <Compile Include="Transaction.cs" />
-    <Compile Include="TransactionInput.cs" />
-    <Compile Include="TransactionOutput.cs" />
-    <Compile Include="UInt256.cs" />
-    <Compile Include="Base58.cs" />
-    <Compile Include="VersionedChecksummedBytes.cs" />
-    <Compile Include="WriterExtensionMethods.cs" />
+    <Compile Include="Parser\Script.cs" />
+    <Compile Include="VO\SimpleAccount.cs" />
+    <Compile Include="VO\Summary.cs" />
+    <Compile Include="VO\Transaction.cs" />
+    <Compile Include="VO\TransactionInput.cs" />
+    <Compile Include="VO\TransactionOutput.cs" />
+    <Compile Include="Parser\UInt256.cs" />
+    <Compile Include="Parser\Base58.cs" />
+    <Compile Include="Parser\VersionedChecksummedBytes.cs" />
+    <Compile Include="Parser\WriterExtensionMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

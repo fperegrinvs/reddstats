@@ -1,6 +1,6 @@
 ﻿namespace ReddStats.Core.Interface
 {
-    interface ITransactionProvider
+    public interface ITransactionProvider
     {
         TransactionOutput GetTransactionOutput(string transactionId, int order);
 
