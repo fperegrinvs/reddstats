@@ -35,6 +35,21 @@
             var data = value.SerializeProtobuf().CompressLZ4();
             mutator.InsertColumn(family, key, mutator.NewColumn("D", data), this.ConsistencyLevel);
         }
-    }
 
+        public void InsertValueNameValue<T>(string key, string family, string name, string value)
+        {
+            mutator.InsertColumn(family, key, mutator.NewColumn(name, value), this.ConsistencyLevel);
+        }
+
+        public T Get<T>(string key, string family) where T : new()
+        {
+            var data = this.CreateSelector().GetColumnFromRow(family, key, "D", this.ConsistencyLevel);
+            return data.Value.DecompressLZ4().DeSerializeProtobuf<T>();
+        }
+
+        public string GetValue(string key, string name, string family)
+        {
+            return this.CreateSelector().GetColumnFromRow(family, key, name, this.ConsistencyLevel).Value.ToString();
+        }
+    }
 }

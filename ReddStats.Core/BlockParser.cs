@@ -2,8 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Configuration;
-    using System.Data.SqlClient;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -44,7 +42,7 @@
         protected List<Summary> History { get; set; }
 
         protected Dictionary<string, Tuple<string, decimal>> OutputTransactions { get; set; }
-
+        private readonly BlockChainDb db = new BlockChainDb();
         protected decimal TotalMoney { get; set; }
 
         protected const int SnapInterval = 60 * 24 * 7;
@@ -74,17 +72,6 @@
                     foreach (var trans in block.Transactions)
                     {
                         connection.Insert(trans.TransactionId, "transaction", trans);
-
-
-                        //foreach (var output in trans.Outputs)
-                        //{
-                        //    connection.Insert(output);
-                        //}"
-
-                        //foreach (var input in trans.Inputs)
-                        //{
-                        //    connection.Insert(input);
-                        //}
                     }
 
                     t += block.TransactionsCount;
@@ -424,7 +411,7 @@
                 return false;
             }
 
-            var stream = new FileStream(this.CurrentFile, FileMode.Open, FileAccess.Read);
+            var stream = new FileStream(this.CurrentFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
 
             Block block;
@@ -452,7 +439,7 @@
             return true;
         }
 
-        private static Block ReadBlock(Stream stream, int blockHeight, ITransactionProvider provider)
+        internal static Block ReadBlock(Stream stream, int blockHeight, ITransactionProvider provider)
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
@@ -480,7 +467,15 @@
         {
             using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
             {
-                reader.Read8Bytes(); // 4 bytes magic, 4 bytes size
+                var magic = reader.Read4Bytes();
+                if (magic == Script.packetMagic)
+                {
+                    reader.Read4Bytes(); // size
+                }
+                else
+                {
+                    stream.Position -= 4;
+                }
 
                 var headerBin = reader.ReadBytes(80);
 
@@ -565,6 +560,11 @@
                 return null;
             }
 
+            if (!Transactions.ContainsKey(transactionId))
+            {
+                Transactions[transactionId] = db.Get<Transaction>(transactionId, "transaction");
+            }
+
             return Transactions[transactionId].Outputs[order];
         }
 
@@ -575,17 +575,28 @@
                 return null;
             }
 
+            if (!Transactions.ContainsKey(transactionId))
+            {
+                Transactions[transactionId] = db.Get<Transaction>(transactionId, "transaction");
+            }
+
             return Transactions[transactionId].Inputs[order];
         }
 
         public Transaction GetTransaction(string transactionId)
         {
+            if (!Transactions.ContainsKey(transactionId))
+            {
+                Transactions[transactionId] = db.Get<Transaction>(transactionId, "transaction");
+            }
+
             return Transactions[transactionId];
         }
 
         public void SaveTransaction(Transaction transaction)
         {
             Transactions[transaction.TransactionId] = transaction;
+            db.Insert(transaction.TransactionId, "transaction", transaction);
         }
     }
 }
