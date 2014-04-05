@@ -8,6 +8,8 @@
 
     using ProtoBuf;
 
+    using ReddStats.Core.Parser;
+
     [ProtoContract]
     public class Transaction
     {

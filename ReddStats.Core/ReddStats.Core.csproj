@@ -66,12 +66,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataProcessor.cs" />
+    <Compile Include="ExcelReports.cs" />
     <Compile Include="FileReader.cs" />
+    <Compile Include="VO\Account.cs" />
+    <Compile Include="VO\AccountTransaction.cs" />
+    <Compile Include="VO\BlockChain.cs" />
+    <Compile Include="VO\ConsolidatedData.cs" />
     <Compile Include="VO\Block.cs" />
     <Compile Include="Parser\BlockParser.cs" />
     <Compile Include="Interface\IBlockProvider.cs" />
-    <Compile Include="Interface\ITransactionProvider.cs" />
-    <Compile Include="Parser\Mapping.cs" />
+    <Compile Include="Providers\Mapping.cs" />
     <Compile Include="Parser\DataCalculator.cs" />
     <Compile Include="Parser\ExtensionMethods.cs" />
     <Compile Include="Program.cs" />
@@ -80,10 +85,10 @@
     <Compile Include="Providers\MemoryProvider.cs" />
     <Compile Include="Providers\RpcProvider.cs" />
     <Compile Include="Parser\ReaderExtensionMethods.cs" />
-    <Compile Include="RPC\GetBlockResponse.cs" />
     <Compile Include="RPC\RpcClient.cs" />
     <Compile Include="RPC\RpcRequest.cs" />
     <Compile Include="Parser\Script.cs" />
+    <Compile Include="VO\RelatedAccounts.cs" />
     <Compile Include="VO\SimpleAccount.cs" />
     <Compile Include="VO\Summary.cs" />
     <Compile Include="VO\Transaction.cs" />

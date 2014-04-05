@@ -1,4 +1,4 @@
-﻿namespace ReddStats.Core
+﻿namespace ReddStats.Core.Parser
 {
     using System;
     using System.Text;

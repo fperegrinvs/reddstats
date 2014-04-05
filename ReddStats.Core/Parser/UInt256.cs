@@ -1,4 +1,4 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core.Parser
 {
     using System;
     using System.Globalization;
@@ -71,7 +71,7 @@
         public System.Numerics.BigInteger ToBigInteger()
         {
             // add a trailing zero so that value is always positive
-            return new System.Numerics.BigInteger(ToByteArray().Concat(0));
+            return new System.Numerics.BigInteger(this.ToByteArray().Concat(0));
         }
 
 

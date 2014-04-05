@@ -6,7 +6,7 @@ namespace ReddStats.Core.Providers
 
     using ReddStats.Core.Interface;
 
-    public class CassandraProvider : ITransactionProvider, IBlockProvider
+    public class CassandraProvider : IBlockChainDataProvider
     {
         private readonly BlockChainDb db = new BlockChainDb();
 
@@ -48,6 +48,29 @@ namespace ReddStats.Core.Providers
         public void SaveBlock(Block block)
         {
             db.Insert(block.Id.ToString(CultureInfo.InvariantCulture), "block", block);
+        }
+
+        public void SaveBlockCount(int count)
+        {
+            this.db.InsertValueNameValue("info", "block", "blockcount", count.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public int ImportFromFiles()
+        {
+            var chain = FileReader.ParseChain();
+            foreach (var block in chain.Blocks)
+            {
+                this.SaveBlock(block);
+
+                foreach (var transaction in block.Transactions)
+                {
+                    this.SaveTransaction(transaction);
+                }
+            }
+
+            this.SaveBlockCount(chain.Blocks.Count);
+
+            return chain.Blocks.Count;
         }
     }
 }

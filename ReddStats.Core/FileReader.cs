@@ -10,10 +10,11 @@ namespace ReddStats.Core
     using ReddStats.Core.Interface;
     using ReddStats.Core.Parser;
     using ReddStats.Core.Providers;
+    using ReddStats.Core.VO;
 
     public class FileReader
     {
-        public static List<Block> ParseChain()
+        public static BlockChain ParseChain()
         {
             var basePath = ConfigurationManager.AppSettings["wallet.datapath"];
 
@@ -26,26 +27,33 @@ namespace ReddStats.Core
 
             int i = 0;
 
-            var blocks = new List<Block>();
+            var chain = new BlockChain();
 
             var memory = new MemoryProvider();
 
             foreach (var file in files)
             {
-                var fileBlocks = ParseFile(file, i, memory, memory);
+                var fileBlocks = ParseFile(file, i, memory);
                 if (fileBlocks == null)
                 {
                     break;
                 }
 
-                blocks.AddRange(fileBlocks);
+                foreach (var block in fileBlocks)
+                {
+                    chain.Blocks.Add(block);
+
+                    foreach (var transaction in block.Transactions)
+                    {
+                        chain.Transactions[transaction.TransactionId] = transaction;
+                    }
+                }
             }
 
-
-            return blocks;
+            return chain;
         }
 
-        public static IEnumerable<Block> ParseFile(string filename, int startBlock, ITransactionProvider transactionProvider, IBlockProvider blockProvider)
+        public static IEnumerable<Block> ParseFile(string filename, int startBlock, IBlockChainDataProvider dataProvider)
         {
             if (!File.Exists(filename))
             {
@@ -59,19 +67,19 @@ namespace ReddStats.Core
             Block block;
             do
             {
-                block = BlockParser.ReadBlock(stream, startBlock++, transactionProvider);
+                block = BlockParser.ReadBlock(stream, startBlock++, dataProvider);
 
                 if (block != null)
                 {
-                    var blockCount = blockProvider.GetBlockCount();
+                    var blockCount = dataProvider.GetBlockCount();
                     if (blockCount > 0)
                     {
-                        var lastBlock = blockProvider.GetBlock(blockCount - 1);
+                        var lastBlock = dataProvider.GetBlock(blockCount - 1);
                         lastBlock.Hash = block.PreviousBlockHash;
 
                         if (blockCount > 1)
                         {
-                            var otherBlock = blockProvider.GetBlock(blockCount - 2);
+                            var otherBlock = dataProvider.GetBlock(blockCount - 2);
                             otherBlock.NextBlockHash = lastBlock.Hash;
                         }
                     }

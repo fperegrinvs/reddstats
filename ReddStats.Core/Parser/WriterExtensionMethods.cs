@@ -1,4 +1,4 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core.Parser
 {
     using System;
     using System.IO;

@@ -1,9 +1,7 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core.Parser
 {
     using System;
     using System.Diagnostics;
-
-    using ReddStats.Core;
 
     public class VersionedChecksummedBytes
     {

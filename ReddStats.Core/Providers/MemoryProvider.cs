@@ -4,7 +4,7 @@
 
     using ReddStats.Core.Interface;
 
-    public class MemoryProvider : ITransactionProvider, IBlockProvider
+    public class MemoryProvider : IBlockChainDataProvider
     {
         protected Dictionary<int, Block> Blocks = new Dictionary<int, Block>();
 

@@ -1,9 +1,9 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core.Parser
 {
     using System;
     using System.Globalization;
 
-    using Org.BouncyCastle.Math;
+    using bsparser;
 
     public static class ExtensionMethods
     {

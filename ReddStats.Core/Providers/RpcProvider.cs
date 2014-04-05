@@ -10,7 +10,7 @@ namespace ReddStats.Core.Providers
     using ReddStats.Core.Parser;
     using ReddStats.Core.RPC;
 
-    public class RpcProvider : ITransactionProvider, IBlockProvider
+    public class RpcProvider : IBlockChainDataProvider
     {
         public TransactionOutput GetTransactionOutput(string transactionId, int order)
         {

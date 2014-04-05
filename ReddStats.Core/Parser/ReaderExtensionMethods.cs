@@ -1,9 +1,11 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core.Parser
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+
+    using bsparser;
 
     public static class ReaderExtensionMethods
     {

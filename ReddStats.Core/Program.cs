@@ -4,7 +4,7 @@
     {
         static void Main(string[] args)
         {
-            var blocks = FileReader.ParseChain();
+           // var blocks = FileReader.ParseChain();
 
             //bp.ParseChain();
 
@@ -16,7 +16,7 @@
 
             //Console.WriteLine(sw.ElapsedMilliseconds);
             //bp.ProcessBalances(true);
-            //bp.SaveFile("E:\\Reddcoin\\balances-4.xlsx");
+            //bp.ExportToExcel("E:\\Reddcoin\\balances-4.xlsx");
         }
     }
 }

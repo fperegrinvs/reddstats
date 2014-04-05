@@ -1,4 +1,4 @@
-﻿namespace bsparser
+﻿namespace ReddStats.Core.Parser
 {
     using System;
     using System.Collections.Generic;
@@ -7,17 +7,14 @@
     using System.Text;
     using System.Threading;
 
+    using bsparser;
+
     using ReddStats.Core;
-    using ReddStats.Core.Parser;
 
     public static class DataCalculator
     {
         private static readonly ThreadLocal<SHA256Managed> _sha256 = new ThreadLocal<SHA256Managed>();
 
-        /**
-* Calculates the SHA-256 hash of the given byte range, and then hashes the resulting hash again. This is
-* standard procedure in BitCoin. The resulting hash is in big endian form.
-*/
         public static byte[] DoubleSHA256(byte[] input, int offset, int length)
         {
             var sha256 = new SHA256Managed();
@@ -61,39 +58,39 @@
         }
 
         public static byte[] CalculateTransactionHash(
-            UInt32 Version,
-            List<TransactionInput> Inputs,
-            List<TransactionOutput> Outputs,
-            UInt32 LockTime)
+            UInt32 version,
+            List<TransactionInput> inputs,
+            List<TransactionOutput> outputs,
+            UInt32 lockTime)
         {
-            return DoubleSHA256(EncodeTransaction(Version, Inputs, Outputs, LockTime));
+            return DoubleSHA256(EncodeTransaction(version, inputs, outputs, lockTime));
         }
 
         public static byte[] EncodeTransaction(
-            UInt32 Version,
-            List<TransactionInput> Inputs,
-            List<TransactionOutput> Outputs,
-            UInt32 LockTime)
+            UInt32 version,
+            List<TransactionInput> inputs,
+            List<TransactionOutput> outputs,
+            UInt32 lockTime)
         {
             using (var stream = new MemoryStream())
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write4Bytes(Version);
-                writer.WriteVarInt((UInt64)Inputs.Count);
-                foreach (var input in Inputs)
+                writer.Write4Bytes(version);
+                writer.WriteVarInt((UInt64)inputs.Count);
+                foreach (var input in inputs)
                 {
                     writer.Write(input.PreviousTxOutputKeyBinary);
                     writer.Write4Bytes((uint)input.PreviousOutputIndex);
                     writer.WriteVarBytes(input.ScriptSignature);
                     writer.Write4Bytes((uint)input.Sequence);
                 }
-                writer.WriteVarInt((UInt64)Outputs.Count);
-                foreach (var output in Outputs)
+                writer.WriteVarInt((UInt64)outputs.Count);
+                foreach (var output in outputs)
                 {
                     writer.Write8Bytes(Convert.ToUInt64(output.Amount *  BlockParser.Divide));
                     writer.WriteVarBytes(output.ScriptPublicKey);
                 }
-                writer.Write4Bytes(LockTime);
+                writer.Write4Bytes(lockTime);
 
                 return stream.ToArray();
             }
