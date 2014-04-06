@@ -2,8 +2,11 @@
 
 namespace ReddStats.Core.VO
 {
+    using System.Runtime.Serialization;
+
     using ProtoBuf;
 
+    [DataContract]
     [ProtoContract]
     public class RelatedAccounts
     {
@@ -13,9 +16,11 @@ namespace ReddStats.Core.VO
             LinkedAccounts = new Dictionary<string, string>();
         }
 
+        [DataMember]
         [ProtoMember(1)]
         public Dictionary<string, string> LinkedAccounts { get; set; }
 
+        [DataMember]
         [ProtoMember(2)]
         public Dictionary<string, HashSet<string>> LinkedAccountList { get; set; }
 

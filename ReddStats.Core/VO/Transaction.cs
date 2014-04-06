@@ -3,12 +3,14 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.Serialization;
 
     using ProtoBuf;
 
     using ReddStats.Core.Parser;
 
     [ProtoContract]
+    [DataContract]
     public class Transaction
     {
         public Transaction(
@@ -52,9 +54,11 @@
         public Transaction()
         { }
 
+        [DataMember]
         [ProtoMember(1)]
         public int BlockId { get; set; }
 
+        [DataMember]
         public int InputsCount
         {
             get
@@ -63,6 +67,7 @@
             }
         }
 
+        [DataMember]
         public int OutputsCount
         {
             get
@@ -72,12 +77,15 @@
         }
 
         [ProtoMember(2)]
+        [DataMember]
         public decimal TotalIn { get; set; }
 
 
         [ProtoMember(3)]
+        [DataMember]
         public decimal TotalOut { get; private set; }
 
+        [DataMember]
         public decimal Fee
         {
             get
@@ -86,25 +94,31 @@
             }
         }
 
+        [DataMember]
         [ProtoMember(4)]
         public DateTime? Date { get; set; }
 
 
+        [DataMember]
         [ProtoMember(5)]
         public long Version { get; set; }
 
 
+        [DataMember]
         [ProtoMember(6)]
         public List<TransactionInput> Inputs { get; set; }
 
+        [DataMember]
         [ProtoMember(7)]
         public List<TransactionOutput> Outputs { get; set; }
 
+        [DataMember]
         [ProtoMember(8)]
         public long LockTime { get; set; }
 
         private string transactionId;
 
+        [DataMember]
         [ProtoMember(9)]
         public string TransactionId
         {
@@ -123,8 +137,8 @@
             }
         }
 
+        [DataMember]
         [ProtoMember(10)]
-
         public long Size { get; private set; }
     }
 }

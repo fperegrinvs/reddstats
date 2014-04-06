@@ -12,6 +12,12 @@ namespace ReddStats.Core.Providers
 
     public class CassandraProvider : IBlockChainDataProvider
     {
+        public static event BlockChangedHandler BlockChanged;
+
+        public static event AccountChangedHandler AccountChanged;
+
+        public static event ConsolidateChangedHandler ConsolidatedChanged;
+
         private readonly BlockChainDb db = new BlockChainDb();
 
         public TransactionOutput GetTransactionOutput(string transactionId, int order)
@@ -72,6 +78,11 @@ namespace ReddStats.Core.Providers
         public void SaveBlock(Block block)
         {
             db.Insert(block.Id.ToString(CultureInfo.InvariantCulture), "block", block);
+
+            if (BlockChanged != null)
+            {
+                BlockChanged(this, block);
+            }
         }
 
         public void SaveBlockCount(int count)
@@ -82,11 +93,21 @@ namespace ReddStats.Core.Providers
         public void SaveAccount(Account account)
         {
             db.Insert(account.Address, "account", account);
+
+            if (AccountChanged != null)
+            {
+                AccountChanged(this, account);
+            }
         }
 
         public void SaveConsolidatedData(ConsolidatedData data)
         {
             db.Insert(data.EndBlock.ToString(CultureInfo.InvariantCulture), "consolidated", data);
+
+            if (ConsolidatedChanged != null)
+            {
+                ConsolidatedChanged(this, data);
+            }
         }
 
         public void SaveAllAccounts(Dictionary<string, Account> accounts)
@@ -183,6 +204,7 @@ namespace ReddStats.Core.Providers
                 {
                     for (var blockToGet = lastIndex; blockToGet < rpcCount; blockToGet++)
                     {
+                        
                         var block = rpc.GetBlock(blockToGet);
                         this.SaveBlock(block);
                         foreach (var transaction in block.Transactions)
@@ -196,7 +218,7 @@ namespace ReddStats.Core.Providers
                                          Transactions = block.Transactions.ToDictionary(t => t.TransactionId)
                                      };
 
-                        consolidated = DataProcessor.ConsolidateData(chain, consolidated, lastblock, lastblock, this);
+                        consolidated = DataProcessor.ConsolidateData(chain, consolidated, blockToGet, blockToGet, this);
 
                         if ((blockToGet + 1) % 1440 == 0)
                         {
@@ -220,4 +242,10 @@ namespace ReddStats.Core.Providers
             }
         }
     }
+
+    public delegate void BlockChangedHandler(object sender, Block block);
+
+    public delegate void AccountChangedHandler(object sender, Account account);
+
+    public delegate void ConsolidateChangedHandler(object sender, ConsolidatedData consolidated);
 }

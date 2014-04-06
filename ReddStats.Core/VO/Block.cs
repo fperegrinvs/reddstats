@@ -3,15 +3,18 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.Serialization;
 
     using ProtoBuf;
 
     using ReddStats.Core.VO;
 
+    [DataContract]
     [ProtoContract]
     public class Block
     {
 
+        [DataMember]
         [ProtoMember(1)]
         public List<Transaction> Transactions { get; set; }
 
@@ -42,10 +45,12 @@
             
         }
 
+        [DataMember]
         [ProtoMember(2)]
         public long Version { get; private set; }
 
 
+        [DataMember]
         public decimal CoinsCreated
         {
             get
@@ -54,27 +59,35 @@
             }
         }
 
+        [DataMember]
         [ProtoMember(3)]
         public string PreviousBlockHash { get; private set; }
 
+        [DataMember]
         [ProtoMember(4)]
         public string MerkleRoot { get; private set; }
 
+        [DataMember]
         [ProtoMember(5)]
         public DateTime Date { get; private set; }
 
+        [DataMember]
         [ProtoMember(6)]
         public double Difficulty { get; private set; }
 
+        [DataMember]
         [ProtoMember(7)]
         public long Nonce { get; private set; }
 
+        [DataMember]
         [ProtoMember(8)]
         public string Hash { get; set; }
 
+        [DataMember]
         [ProtoMember(9)]
         public string NextBlockHash { get; set; }
 
+        [DataMember]
         public decimal Size
         {
             get
@@ -83,6 +96,7 @@
             }
         }
 
+        [DataMember]
         public decimal TotalTransactionValue
         {
             get
@@ -91,6 +105,7 @@
             }
         }
 
+        [DataMember]
         public decimal TotalFees
         {
             get
@@ -99,7 +114,7 @@
             }
         }
 
-
+        [DataMember]
         public int TransactionsCount
         {
             get
@@ -108,9 +123,11 @@
             }
         }
 
+        [DataMember]
         [ProtoMember(10)]
         public int Id { get; set; }
 
+        [DataMember]
         [ProtoMember(11)]
         public int HashCode;
 
