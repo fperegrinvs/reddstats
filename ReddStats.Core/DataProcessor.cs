@@ -4,29 +4,30 @@
     using System.Collections.Generic;
     using System.Linq;
 
+    using ReddStats.Core.Providers;
     using ReddStats.Core.VO;
 
     public static class DataProcessor
     {
-        public static ConsolidatedData ConsolidateData(BlockChain chain, ConsolidatedData previousConsolidatedData = null, int startBlock = 0, int? endBlock = null)
+        public static ConsolidatedData ConsolidateData(BlockChain chain, ConsolidatedData previousConsolidatedData = null, int startBlock = 0, int? endBlock = null, CassandraProvider provider = null)
         {
             if (!endBlock.HasValue)
             {
-                endBlock = chain.Blocks.Count;
+                endBlock = chain.Blocks.Count - 1;
             }
 
             var consolidated = new ConsolidatedData
                                {
                                    RelatedAccounts = previousConsolidatedData != null ? previousConsolidatedData.RelatedAccounts : new RelatedAccounts(),
-                                   AccountBalances = new Dictionary<string, decimal>(),
-                                   Accounts = new Dictionary<string, Account>(),
+                                   AccountBalances = previousConsolidatedData != null ? previousConsolidatedData.AccountBalances : new Dictionary<string, decimal>(),
+                                   Accounts = previousConsolidatedData != null ? previousConsolidatedData.Accounts : new Dictionary<string, Account>(),
                                    EndBlock = endBlock.Value,
                                    TotalMoney = previousConsolidatedData != null ? previousConsolidatedData.TotalMoney : 0M,
                                    TotalTransactions = previousConsolidatedData != null ? previousConsolidatedData.TotalTransactions : 0,
-                                   TotalTransactionsValue = previousConsolidatedData != null ? previousConsolidatedData.TotalTransactionsValue : 0M
+                                   TotalTransactionsValue = previousConsolidatedData != null ? previousConsolidatedData.TotalTransactionsValue : 0M,
                                };
 
-            var blocks = chain.Blocks.Skip(startBlock).Take(endBlock.Value - startBlock);
+            var blocks = chain.Blocks.SkipWhile(b => b.Id < startBlock).TakeWhile(b => b.Id <= endBlock.Value);
 
             foreach (var block in blocks)
             {
@@ -52,7 +53,7 @@
 
                                 if (!consolidated.Accounts.ContainsKey(mainAccount))
                                 {
-                                    consolidated.Accounts[mainAccount] = new Account();
+                                    consolidated.Accounts[mainAccount] = new Account { Address = mainAccount };
                                 }
 
                                 consolidated.Accounts[mainAccount].RelatedAccounts = consolidated.RelatedAccounts.LinkedAccountList[mainAccount];
@@ -65,10 +66,17 @@
                             else
                             {
                                 consolidated.AccountBalances[input.FromAddress] = input.Amount;
-                                consolidated.Accounts[input.FromAddress] = new Account();
+                                consolidated.Accounts[input.FromAddress] = new Account { Address = input.FromAddress };
                             }
 
                             consolidated.TotalMoney -= input.Amount;
+
+                            if (consolidated.Accounts[input.FromAddress].Transactions == null)
+                            {
+                                var transactions = provider.GetAccount(input.FromAddress).Transactions;
+                                consolidated.Accounts[input.FromAddress].Transactions = transactions;
+                            }
+
                             consolidated.Accounts[input.FromAddress].Transactions.Add(new AccountTransaction
                                                                                       {
                                                                                           BlockId = block.Id,
@@ -78,6 +86,8 @@
                                                                                           TransactionIndex = input.Index,
                                                                                           Value = input.Amount
                                                                                       });
+
+                            consolidated.Accounts[input.FromAddress].Changed = true;
                         }
                     }
 
@@ -96,11 +106,17 @@
                         else
                         {
                             consolidated.AccountBalances[output.ToAddress] = output.Amount;
-                            consolidated.Accounts[output.ToAddress] = new Account();
+                            consolidated.Accounts[output.ToAddress] = new Account{ Address = output.ToAddress };
                         }
 
                         consolidated.TotalMoney += output.Amount;
                         consolidated.TotalTransactionsValue += output.Amount;
+
+                        if (consolidated.Accounts[output.ToAddress].Transactions == null)
+                        {
+                            var transactions = provider.GetAccount(output.ToAddress).Transactions;
+                            consolidated.Accounts[output.ToAddress].Transactions = transactions;
+                        }
 
                         consolidated.Accounts[output.ToAddress].Transactions.Add(new AccountTransaction
                         {
@@ -111,6 +127,8 @@
                             TransactionIndex = output.Index,
                             Value = output.Amount
                         });
+
+                        consolidated.Accounts[output.ToAddress].Changed = true;
 
                         o++;
                     }
@@ -197,7 +215,5 @@
             summary.Top100Total = summary.TopAccounts.Take(100).Sum(x => x.Balance);
             return summary;
         }
-
-
     }
 }

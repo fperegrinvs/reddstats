@@ -7,6 +7,12 @@ namespace ReddStats.Core.VO
     [ProtoContract]
     public class RelatedAccounts
     {
+        public RelatedAccounts()
+        {
+            LinkedAccountList = new Dictionary<string, HashSet<string>>();
+            LinkedAccounts = new Dictionary<string, string>();
+        }
+
         [ProtoMember(1)]
         public Dictionary<string, string> LinkedAccounts { get; set; }
 

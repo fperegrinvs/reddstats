@@ -24,6 +24,11 @@ namespace ReddStats.Core.VO
 
         [ProtoMember(6)]
         public Decimal Value { get; set; }
+
+        public override int GetHashCode()
+        {
+            return (TransactionIndex + TransactionType + TransactionId).GetHashCode();
+        }
     }
 
     [ProtoContract]

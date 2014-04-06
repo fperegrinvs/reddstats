@@ -17,7 +17,8 @@
             var famManager = new ColumnFamilyManager(connection, "blockchain");
             famManager.TryAddColumnFamily("block", ColumnTypeEnum.Standard, ComparatorTypeEnum.UTF8Type);
             famManager.TryAddColumnFamily("transaction", ColumnTypeEnum.Standard, ComparatorTypeEnum.UTF8Type);
-            famManager.TryAddColumnFamily("address", ColumnTypeEnum.Standard, ComparatorTypeEnum.UTF8Type);
+            famManager.TryAddColumnFamily("account", ColumnTypeEnum.Standard, ComparatorTypeEnum.UTF8Type);
+            famManager.TryAddColumnFamily("consolidated", ColumnTypeEnum.Standard, ComparatorTypeEnum.UTF8Type);
         }
     }
 
@@ -50,7 +51,7 @@
 
         public string GetValue(string key, string name, string family)
         {
-            return this.CreateSelector().GetColumnFromRow(family, key, name, this.ConsistencyLevel).Value.ToString();
+            return this.CreateSelector().GetColumnFromRow(family, key, name, this.ConsistencyLevel).Value.ToUtf8String();
         }
     }
 }

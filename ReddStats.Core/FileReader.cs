@@ -25,7 +25,7 @@ namespace ReddStats.Core
 
             var files = Directory.GetFiles(basePath + "\\blocks", "blk*.dat").OrderBy(x => x);
 
-            int i = 0;
+            int startBlock = 0;
 
             var chain = new BlockChain();
 
@@ -33,16 +33,19 @@ namespace ReddStats.Core
 
             foreach (var file in files)
             {
-                var fileBlocks = ParseFile(file, i, memory);
+                var fileBlocks = ParseFile(file, startBlock, memory);
+
                 if (fileBlocks == null)
                 {
                     break;
                 }
 
+                startBlock += fileBlocks.Count;
+
+                chain.Blocks.AddRange(fileBlocks);
+
                 foreach (var block in fileBlocks)
                 {
-                    chain.Blocks.Add(block);
-
                     foreach (var transaction in block.Transactions)
                     {
                         chain.Transactions[transaction.TransactionId] = transaction;
@@ -53,7 +56,7 @@ namespace ReddStats.Core
             return chain;
         }
 
-        public static IEnumerable<Block> ParseFile(string filename, int startBlock, IBlockChainDataProvider dataProvider)
+        public static List<Block> ParseFile(string filename, int startBlock, IBlockChainDataProvider dataProvider)
         {
             if (!File.Exists(filename))
             {

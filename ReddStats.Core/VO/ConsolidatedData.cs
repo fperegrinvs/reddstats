@@ -31,7 +31,7 @@
 
         public void RemoveZeroBalances()
         {
-            AccountBalances = AccountBalances.Where(a => a.Value == 0M).ToDictionary(a => a.Key, b => b.Value);
+            AccountBalances = AccountBalances.Where(a => a.Value > 0M).ToDictionary(a => a.Key, b => b.Value);
         }
     }
 }
